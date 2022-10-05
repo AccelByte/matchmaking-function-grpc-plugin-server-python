@@ -24,6 +24,11 @@ generate: clean
 		--grpc_python_out=${PROTO_DIR} \
 		${PROTO_DIR}/*.proto
 
+beautify:
+	${VENV_DIR}/bin/pip install --upgrade black
+	black ${SOURCE_DIR}
+	black ${TESTS_DIR}
+
 run:
 	PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} \
  		${VENV_DIR}/bin/python -m app
