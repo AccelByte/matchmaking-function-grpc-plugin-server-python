@@ -1,5 +1,6 @@
 PROTO_DIR = src/app/proto
 SOURCE_DIR = src
+TESTS_DIR = tests
 VENV_DIR = venv
 
 PYTHON_EXEC = python3.9
@@ -26,3 +27,7 @@ generate: clean
 run:
 	PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} \
  		${VENV_DIR}/bin/python -m app
+
+test:
+	PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} \
+ 		${VENV_DIR}/bin/python -m app_tests
