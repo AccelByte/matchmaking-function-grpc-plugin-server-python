@@ -17,9 +17,7 @@ class MatchFunctionServicerTestCase(unittest.TestCase):
     def test_get_stat_codes_returns_stat_codes_response(self):
         # arrange
         request = match_func_proto.GetStatCodesRequest(
-            rules=match_func_proto.Rules(
-                json=json.dumps({})
-            )
+            rules=match_func_proto.Rules(json=json.dumps({}))
         )
 
         # act
@@ -34,9 +32,11 @@ class MatchFunctionServicerTestCase(unittest.TestCase):
         created_at = timestamp_proto.Timestamp()
         created_at.GetCurrentTime()
         player_attributes = struct_proto.Struct()
-        player_attributes.update({
-            "bar": "bar",
-        })
+        player_attributes.update(
+            {
+                "bar": "bar",
+            }
+        )
         players = [
             match_func_proto.Ticket.PlayerData(
                 player_id="foo",
@@ -44,9 +44,11 @@ class MatchFunctionServicerTestCase(unittest.TestCase):
             )
         ]
         ticket_attributes = struct_proto.Struct()
-        ticket_attributes.update({
-            "foo": "foo",
-        })
+        ticket_attributes.update(
+            {
+                "foo": "foo",
+            }
+        )
         request = match_func_proto.ValidateTicketRequest(
             ticket=match_func_proto.Ticket(
                 ticket_id="foo",
@@ -56,11 +58,9 @@ class MatchFunctionServicerTestCase(unittest.TestCase):
                 ticket_attributes=ticket_attributes,
                 latencies={
                     "foo": 0,
-                }
+                },
             ),
-            rules=match_func_proto.Rules(
-                json=json.dumps({})
-            )
+            rules=match_func_proto.Rules(json=json.dumps({})),
         )
 
         # act
@@ -75,9 +75,11 @@ class MatchFunctionServicerTestCase(unittest.TestCase):
         created_at = timestamp_proto.Timestamp()
         created_at.GetCurrentTime()
         player_attributes = struct_proto.Struct()
-        player_attributes.update({
-            "bar": "bar",
-        })
+        player_attributes.update(
+            {
+                "bar": "bar",
+            }
+        )
         players = [
             match_func_proto.Ticket.PlayerData(
                 player_id="foo",
@@ -85,18 +87,18 @@ class MatchFunctionServicerTestCase(unittest.TestCase):
             )
         ]
         ticket_attributes = struct_proto.Struct()
-        ticket_attributes.update({
-            "foo": "foo",
-        })
+        ticket_attributes.update(
+            {
+                "foo": "foo",
+            }
+        )
         requests = [
             match_func_proto.MakeMatchesRequest(
                 parameters=match_func_proto.MakeMatchesRequest.MakeMatchesParameters(
                     scope=match_func_proto.Scope(
                         ab_trace_id="foo",
                     ),
-                    rules=match_func_proto.Rules(
-                        json=json.dumps({})
-                    )
+                    rules=match_func_proto.Rules(json=json.dumps({})),
                 )
             ),
             match_func_proto.MakeMatchesRequest(
@@ -108,9 +110,9 @@ class MatchFunctionServicerTestCase(unittest.TestCase):
                     ticket_attributes=ticket_attributes,
                     latencies={
                         "foo": 0,
-                    }
+                    },
                 )
-            )
+            ),
         ]
 
         # act

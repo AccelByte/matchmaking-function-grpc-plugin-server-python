@@ -6,25 +6,22 @@ import app.proto.matchFunction_pb2 as match_func_proto
 
 
 class MatchFunctionServicer(match_func_grpc.MatchFunctionServicer):
-
     def GetStatCodes(self, request, context):
-        return match_func_proto.StatCodesResponse(
-            codes=["foo", "bar"]
-        )
+        return match_func_proto.StatCodesResponse(codes=["foo", "bar"])
 
     def ValidateTicket(self, request, context):
-        return match_func_proto.ValidateTicketResponse(
-            valid=True
-        )
+        return match_func_proto.ValidateTicketResponse(valid=True)
 
     def MakeMatches(self, request_iterator, context):
         for request in request_iterator:
             created_at = timestamp_proto.Timestamp()
             created_at.GetCurrentTime()
             player_attributes = struct_proto.Struct()
-            player_attributes.update({
-                "bar": "bar",
-            })
+            player_attributes.update(
+                {
+                    "bar": "bar",
+                }
+            )
             players = [
                 match_func_proto.Ticket.PlayerData(
                     player_id="foo",
@@ -32,13 +29,17 @@ class MatchFunctionServicer(match_func_grpc.MatchFunctionServicer):
                 )
             ]
             ticket_attributes = struct_proto.Struct()
-            ticket_attributes.update({
-                "foo": "foo",
-            })
+            ticket_attributes.update(
+                {
+                    "foo": "foo",
+                }
+            )
             match_attributes = struct_proto.Struct()
-            match_attributes.update({
-                "foo": "foo",
-            })
+            match_attributes.update(
+                {
+                    "foo": "foo",
+                }
+            )
             yield match_func_proto.MatchResponse(
                 match=match_func_proto.Match(
                     tickets=[
@@ -50,7 +51,7 @@ class MatchFunctionServicer(match_func_grpc.MatchFunctionServicer):
                             ticket_attributes=ticket_attributes,
                             latencies={
                                 "foo": 0,
-                            }
+                            },
                         )
                     ],
                     teams=[

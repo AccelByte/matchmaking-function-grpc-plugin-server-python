@@ -32,7 +32,8 @@ def parse_args():
     parser = ArgumentParser()
 
     parser.add_argument(
-        "-f", "--format",
+        "-f",
+        "--format",
         default="tap",
         choices=("default", "tap"),
     )
