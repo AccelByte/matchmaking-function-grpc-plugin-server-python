@@ -50,3 +50,9 @@ Thumbs.db
 
 # Virtual Environments
 venv*/
+
+# Generated Proto files
+*_grpc.py
+*_pb2.py
+*_pb2.pyi
+*_pb2_grpc.py
