@@ -1,6 +1,7 @@
 import json
+import logging
 
-from typing import List
+from typing import List, Optional
 
 import google.protobuf.struct_pb2 as struct_proto
 import google.protobuf.timestamp_pb2 as timestamp_proto
@@ -10,21 +11,26 @@ import app.proto.matchFunction_pb2 as match_func_proto
 
 
 class MatchFunctionServicer(match_func_grpc.MatchFunctionServicer):
-    def __init__(self, ship_count_min: int = 2, ship_count_max: int = 2):
+    def __init__(self, ship_count_min: int = 2, ship_count_max: int = 2, logger: Optional[logging.Logger] = None):
         self.ship_count_min: int = ship_count_min
         self.ship_count_max: int = ship_count_max
 
         self.unmatched_tickets: List[match_func_proto.Ticket] = []
 
+        self.logger = logger if logger is not None else logging.getLogger(self.__class__.__name__)
+
     def GetStatCodes(self, request, context):
+        self.logger.info("received GetStatCodesRequest")
         return match_func_proto.StatCodesResponse(codes=["foo", "bar"])
 
     def ValidateTicket(self, request, context):
+        self.logger.info("received ValidateTicketRequest")
         return match_func_proto.ValidateTicketResponse(valid=True)
 
     def MakeMatches(self, request_iterator, context):
         for request in request_iterator:
             if request.HasField("parameters"):
+                self.logger.info("received MakeMatchesRequest(parameters)")
                 parameters = request.parameters
                 rules = parameters.rules
                 json_str = rules.json
@@ -40,7 +46,9 @@ class MatchFunctionServicer(match_func_grpc.MatchFunctionServicer):
                 ):
                     self.ship_count_min = new_ship_count_min
                     self.ship_count_max = new_ship_count_max
+                    self.logger.info(f"- updated shipCountMin: {self.ship_count_min} and shipCountMax: {self.ship_count_max}")
             elif request.HasField("ticket"):
+                self.logger.info("received MakeMatchesRequest(ticket)")
                 ticket = request.ticket
                 self.unmatched_tickets.append(ticket)
                 if len(self.unmatched_tickets) == self.ship_count_max:
@@ -49,6 +57,9 @@ class MatchFunctionServicer(match_func_grpc.MatchFunctionServicer):
                     )
                     self.unmatched_tickets.clear()
                     yield match_response
+                self.logger.info(f"- unmatched ticket size: {len(self.unmatched_tickets)}")
+            else:
+                raise ValueError(request)
 
     @staticmethod
     def __make_match_response_from_tickets(tickets: List[match_func_proto.Ticket]):
