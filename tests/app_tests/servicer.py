@@ -1,4 +1,5 @@
 import json
+import logging
 import unittest
 import uuid
 
@@ -13,10 +14,14 @@ import app.proto.matchFunction_pb2 as match_func_proto
 import app.ctypes
 import app.servicer
 
+import app_tests.logger
+
 
 class MatchFunctionServicerTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.servicer = app.servicer.MatchFunctionServicer()
+        self.servicer = app.servicer.MatchFunctionServicer(
+            logger=app_tests.logger.LOGGER,
+        )
 
     def test_get_stat_codes_returns_stat_codes_response(self):
         # arrange

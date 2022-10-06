@@ -1,11 +1,19 @@
+import logging
 import unittest
 
 from argparse import ArgumentParser
 
 import app_tests
+import app_tests.logger
 
 
 def main(**kwargs):
+    log_level = max(1, min(kwargs.get("log_level"), 50))
+    logger = app_tests.logger.LOGGER
+    logger.setLevel(log_level)
+    if 0 < log_level <= logging.INFO:
+        logger.addHandler(logging.StreamHandler())
+
     loader = unittest.TestLoader()
     runner = None
 
@@ -38,7 +46,11 @@ def parse_args():
         choices=("default", "tap"),
     )
 
+    parser.add_argument("-v", "--verbose", action="count", default=1)
+
     result = vars(parser.parse_args())
+
+    result["log_level"] = 70 - (10 * result["verbose"]) if result["verbose"] > 0 else 0
 
     return result
 
