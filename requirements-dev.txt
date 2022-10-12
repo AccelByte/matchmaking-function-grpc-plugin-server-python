@@ -1,7 +1,15 @@
-grpcio==1.48.1
-grpcio-tools==1.48.1
-grpclib==0.4.3
 protobuf==3.19.4
+grpcio==1.48.1
+grpcio-reflection==1.48.1
+
+requests
+httpx
+websockets
+pyyaml
+jwt
+accelbyte-py-sdk
 
 black==22.8.0
+grpcio-testing==1.48.1
+grpcio-tools==1.48.1
 tap.py==3.1
