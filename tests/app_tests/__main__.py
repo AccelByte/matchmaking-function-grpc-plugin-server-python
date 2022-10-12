@@ -3,7 +3,7 @@ import unittest
 
 from argparse import ArgumentParser
 
-import app_tests
+import app_tests.services
 import app_tests.logger
 
 
@@ -29,7 +29,7 @@ def main(**kwargs):
     if runner is None:
         runner = unittest.TextTestRunner()
 
-    suite = loader.loadTestsFromModule(app_tests)
+    suite = loader.loadTestsFromModule(app_tests.services)
     result = runner.run(suite)
 
     if not result.wasSuccessful():
