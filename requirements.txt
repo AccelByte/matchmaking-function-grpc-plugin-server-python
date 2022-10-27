@@ -3,7 +3,9 @@ grpcio==1.48.1
 grpcio-reflection==1.48.1
 
 accelbyte-py-sdk
+bitarray
 httpx
+mmh3
 pyjwt[crypto]
 pyyaml
 requests
