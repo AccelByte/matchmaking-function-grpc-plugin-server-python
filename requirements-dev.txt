@@ -2,13 +2,16 @@ protobuf==3.19.4
 grpcio==1.48.1
 grpcio-reflection==1.48.1
 
-requests
-httpx
-websockets
-pyyaml
-pyjwt[crypto]
 accelbyte-py-sdk
+httpx
+pyjwt[crypto]
+pyyaml
+requests
+websockets
 
-pylint==2.15.5
 grpcio-testing==1.48.1
-tap.py==3.1
+grpcio-tools==1.48.1
+
+black
+pylint
+tap.py
