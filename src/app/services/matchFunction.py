@@ -1,13 +1,12 @@
-import asyncio
 import json
 
 from logging import Logger, getLogger
 from typing import List, Optional
 
 from app.proto.matchFunction_pb2 import Match, Ticket
-from app.proto.matchFunction_pb2 import GetStatCodesRequest, StatCodesResponse
-from app.proto.matchFunction_pb2 import ValidateTicketRequest, ValidateTicketResponse
-from app.proto.matchFunction_pb2 import MakeMatchesRequest, MatchResponse
+from app.proto.matchFunction_pb2 import StatCodesResponse
+from app.proto.matchFunction_pb2 import ValidateTicketResponse
+from app.proto.matchFunction_pb2 import MatchResponse
 from app.proto.matchFunction_pb2_grpc import MatchFunctionServicer
 
 

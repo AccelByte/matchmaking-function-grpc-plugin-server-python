@@ -1,12 +1,10 @@
 from logging import Logger
-from typing import Optional
+from typing import Awaitable, Callable, Optional
 
-import grpc
 import grpc.aio
 
 
 class DebugLoggingServerInterceptor(grpc.aio.ServerInterceptor):
-
     def __init__(self, logger: Optional[Logger] = None):
         self.logger = logger
 
