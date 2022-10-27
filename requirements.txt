@@ -6,5 +6,5 @@ requests
 httpx
 websockets
 pyyaml
-jwt
+pyjwt[crypto]
 accelbyte-py-sdk

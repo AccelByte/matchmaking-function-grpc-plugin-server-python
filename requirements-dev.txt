@@ -6,7 +6,7 @@ requests
 httpx
 websockets
 pyyaml
-jwt
+pyjwt[crypto]
 accelbyte-py-sdk
 
 pylint==2.15.5
