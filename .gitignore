@@ -48,6 +48,9 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Cache dir
+.cache/
+
 # Virtual Environments
 venv*/
 
