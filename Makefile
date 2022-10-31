@@ -30,6 +30,14 @@ generate: clean
 		--grpc-python_out=${SOURCE_DIR} \
 		${SOURCE_DIR}/${PROTO_DIR}/*.proto
 
+lint:
+	rm -f lint.err
+	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip -e PYLINTHOME=/data/.cache/pylint  --entrypoint /bin/sh python:3.9-slim \
+			-c '${VENV_DEV_DIR}/bin/pip install -r requirements-dev.txt \
+					&& ${VENV_DEV_DIR}/bin/pip install pylint \
+					&& PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}/bin/python -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' || touch lint.err
+	[ ! -f lint.err ]
+
 beautify:
 	docker run -t --rm -u $$(id -u):$$(id -g) -v $$(pwd):/data/ -w /data/ cytopia/black:22-py3.9 \
 		${SOURCE_DIR} \
