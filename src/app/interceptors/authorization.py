@@ -5,6 +5,7 @@ import grpc
 import grpc.aio
 
 from app.auth.token_validator import TokenValidator
+from app.auth.models import Permission
 
 
 class AuthorizationServerInterceptor(grpc.aio.ServerInterceptor):
@@ -22,7 +23,10 @@ class AuthorizationServerInterceptor(grpc.aio.ServerInterceptor):
         self.token_validator: TokenValidator = token_validator
         self.logger: Optional[Logger] = logger
 
-        self.required_permission: str = f"NAMESPACE:{namespace}:{resource_name}"
+        self.required_permission: Permission = Permission.create(
+            action=2,
+            resource=f"NAMESPACE:{namespace}:{resource_name}",
+        )
 
     async def intercept_service(
         self,
@@ -48,7 +52,12 @@ class AuthorizationServerInterceptor(grpc.aio.ServerInterceptor):
 
         try:
             token = authorization.removeprefix(self.BEARER_PREFIX)
-            if not self.token_validator.validate(token=token):
+            if not await self.token_validator.validate(
+                token=token,
+                permission=self.required_permission,
+                namespace=self.namespace,
+                user_id=None,
+            ):
                 raise self.create_aio_rpc_error(error="unauthorized call")
         except Exception as e:
             raise self.create_aio_rpc_error(

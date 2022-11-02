@@ -8,38 +8,21 @@ import accelbyte_py_sdk.api.iam as iam_service
 from accelbyte_py_sdk import AccelByteSDK
 
 from app.auth.bloom_filter import BloomFilter
+from app.auth.errors import (
+    FetchConfigurationError,
+    FetchTokenGrantError,
+    FetchJWKSError,
+    FetchRevocationListError,
+    FetchRoleError,
+    InvalidTokenGrantError,
+)
+from app.auth.errors import TokenKeyError, TokenRevokedError, UserRevokedError
+from app.auth.models import Permission, Role
 
 
 JWTClaims = Dict[str, Any]
+NamespaceRole = Dict[str, str]
 PublicPrivateKey = Any
-
-
-class FetchValidationDataError(Exception):
-    pass
-
-
-class FetchConfigurationError(FetchValidationDataError):
-    pass
-
-
-class FetchJWKSError(FetchValidationDataError):
-    pass
-
-
-class FetchRevocationListError(FetchValidationDataError):
-    pass
-
-
-class TokenValidationError(Exception):
-    pass
-
-
-class TokenRevokedError(TokenValidationError):
-    pass
-
-
-class UserRevokedError(TokenValidationError):
-    pass
 
 
 class TokenValidator:
@@ -51,16 +34,74 @@ class TokenValidator:
     def __init__(
         self,
         sdk: AccelByteSDK,
+        publisher_namespace: Optional[str] = None,
     ) -> None:
         self.sdk: AccelByteSDK = sdk
-        self._jwks: Dict[str, PublicPrivateKey] = {}
+        self.publisher_namespace: Optional[str] = publisher_namespace
+
         self._lock: RLock = RLock()
+
+        self._client_token: Optional[str] = None
+        self._jwks: Dict[str, PublicPrivateKey] = {}
         self._revoked_token_filter: Optional[BloomFilter] = None
         self._revoked_users = {}
+        self._roles = {}
 
     async def initialize(self) -> None:
+        await self.fetch_client_token()
         await self.fetch_jwks()
         await self.fetch_revocation_list()
+
+    def decode(
+        self,
+        token: str,
+        decode_algorithms: Optional[List[str]] = None,
+        decode_options: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> JWTClaims:
+        decode_algorithms = (
+            decode_algorithms
+            if decode_algorithms is not None
+            else self.DEFAULT_DECODE_ALGORITHMS
+        )
+        decode_options = (
+            decode_options
+            if decode_options is not None
+            else self.DEFAULT_DECODE_OPTIONS
+        )
+
+        header_params = jwt.get_unverified_header(jwt=token)
+        if not (kid := header_params.get(self.JWS_HEADER_PARAM_KEY_ID_KEY)):
+            raise KeyError(self.JWS_HEADER_PARAM_KEY_ID_KEY)
+
+        if not (key := self._jwks.get(kid)):
+            raise KeyError(kid)
+
+        claims = jwt.decode(
+            jwt=token,
+            key=key,
+            algorithms=decode_algorithms,
+            options=decode_options,
+        )
+
+        if sub := claims.get("sub"):
+            claims["user_id"] = sub
+
+        return claims
+
+    async def fetch_client_token(self) -> None:
+        result, error = await iam_service.token_grant_v3_async(
+            grant_type="client_credentials",
+            sdk=self.sdk,
+        )
+        if error:
+            raise FetchTokenGrantError(error)
+
+        if not result or not result.access_token:
+            raise InvalidTokenGrantError()
+
+        self.sdk.set_token(result)
+        self._client_token = result.access_token
 
     async def fetch_jwks(self) -> None:
         result, error = await iam_service.get_jwksv3_async(sdk=self.sdk)
@@ -102,42 +143,123 @@ class TokenValidator:
                     revoked_at = self.str2datetime(user.revoked_at).timestamp()
                     self._revoked_users[user.id_] = revoked_at
 
-    def decode(
+    async def get_role(self, role_id: str, force_fetch: bool = False) -> Role:
+        if not force_fetch and (role := self._roles.get(role_id)):
+            return role
+
+        role, error = await iam_service.admin_get_role_v3_async(
+            role_id=role_id, sdk=self.sdk
+        )
+        if error:
+            raise FetchRoleError()
+
+        self._roles[role_id] = role
+        return role
+
+    async def get_role_permissions(self, role_id: str) -> List[Permission]:
+        role = await self.get_role(role_id=role_id)
+        return role.permissions
+
+    async def get_role_permissions_2(
+        self, role_id: str, namespace: str, user_id: Optional[str] = None
+    ) -> List[Permission]:
+        permissions = await self.get_role_permissions(role_id=role_id)
+        permissions = [
+            Permission.create(
+                action=p.action,
+                resource=self.replace_resource(
+                    resource=p.resource,
+                    namespace=namespace,
+                    user_id=user_id,
+                ),
+            )
+            for p in permissions
+        ]
+
+        return permissions
+
+    async def get_role_permissions_3(
+        self, namespace_role: NamespaceRole, user_id: Optional[str] = None
+    ) -> List[Permission]:
+        permissions = await self.get_role_permissions_2(
+            role_id=namespace_role.get("roleId"),
+            namespace=namespace_role.get("namespace"),
+            user_id=user_id,
+        )
+
+        return permissions
+
+    async def has_valid_permissions(
         self,
-        token: str,
-        decode_algorithms: Optional[List[str]] = None,
-        decode_options: Optional[Dict[str, Any]] = None,
-        **kwargs,
-    ) -> JWTClaims:
-        decode_algorithms = (
-            decode_algorithms
-            if decode_algorithms is not None
-            else self.DEFAULT_DECODE_ALGORITHMS
-        )
-        decode_options = (
-            decode_options
-            if decode_options is not None
-            else self.DEFAULT_DECODE_OPTIONS
-        )
+        claims: JWTClaims,
+        permission: Optional[Permission] = None,
+        namespace: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ) -> bool:
+        if permission is None:
+            return True
 
-        header_params = jwt.get_unverified_header(jwt=token)
-        if not (kid := header_params.get(self.JWS_HEADER_PARAM_KEY_ID_KEY)):
-            raise KeyError(self.JWS_HEADER_PARAM_KEY_ID_KEY)
+        if not (token_namespace := claims.get("namespace")):
+            return False
 
-        if not (key := self._jwks.get(kid)):
-            raise KeyError(kid)
-
-        claims = jwt.decode(
-            jwt=token,
-            key=key,
-            algorithms=decode_algorithms,
-            options=decode_options,
+        modified_resource = self.replace_resource(
+            resource=permission.resource,
+            namespace=namespace,
+            token_namespace=token_namespace,
+            publisher_namespace=self.publisher_namespace,
+            user_id=user_id,
         )
 
-        if sub := claims.get("sub"):
-            claims["user_id"] = sub
+        # Check claim.permissions.
+        origin_permissions = claims.get("permissions", [])
+        origin_permissions = [
+            Permission.create(
+                action=p.get("action"),
+                resource=p.get("resource"),
+            )
+            for p in origin_permissions
+        ]
+        if self.validate_permissions(
+            permissions=origin_permissions,
+            resource=modified_resource,
+            action=permission.action,
+        ):
+            return True
 
-        return claims
+        # Check claim.namespace_roles.
+        claims_user_id = claims.get("user_id")
+        namespace_roles = claims.get("namespace_roles")
+        if claims_user_id and namespace_roles:
+            role_namespace_permissions = []
+            for namespace_role in namespace_roles:
+                permissions = await self.get_role_permissions_3(
+                    namespace_role=namespace_role, user_id=claims_user_id
+                )
+                role_namespace_permissions.extend(permissions)
+            if self.validate_permissions(
+                permissions=role_namespace_permissions,
+                resource=modified_resource,
+                action=permission.action,
+            ):
+                return True
+
+        # Check claim.roles.
+        roles = claims.get("roles")
+        if roles:
+            role_permissions = []
+            for role_id in roles:
+                permissions = await self.get_role_permissions_2(
+                    role_id=role_id, namespace=token_namespace, user_id=user_id
+                )
+                role_permissions.extend(permissions)
+            if self.validate_permissions(
+                permissions=role_permissions,
+                resource=modified_resource,
+                action=permission.action,
+            ):
+                return True
+
+        return False
 
     def is_token_revoked(self, token: str) -> bool:
         with self._lock:
@@ -150,18 +272,62 @@ class TokenValidator:
                 return revoked_at >= issued_at
         return False
 
-    def validate(self, token: str, **kwargs) -> bool:
+    async def validate(
+        self,
+        token: str,
+        permission: Optional[Permission] = None,
+        namespace: Optional[str] = None,
+        user_id: Optional[str] = None,
+        **kwargs
+    ) -> bool:
         claims = self.decode(token=token, **kwargs)
 
-        iat = claims["iat"]
-        sub = claims["sub"]
-        if self.is_user_revoked(user_id=sub, issued_at=iat):
-            raise UserRevokedError()
+        if claims_user_id := claims.get("user_id"):
+            if self.is_user_revoked(
+                user_id=claims_user_id, issued_at=claims.get("iat")
+            ):
+                raise UserRevokedError()
 
         if self.is_token_revoked(token=token):
             raise TokenRevokedError()
 
+        if not await self.has_valid_permissions(
+            claims=claims, permission=permission, namespace=namespace, user_id=user_id
+        ):
+            return False
+
         return True
+
+    @staticmethod
+    def replace_resource(
+        resource: str,
+        namespace: Optional[str] = None,
+        token_namespace: Optional[str] = None,
+        publisher_namespace: Optional[str] = None,
+        user_id: Optional[str] = None,
+        cross_allowed: bool = False,
+    ) -> str:
+        modified_resource: str = resource
+
+        if (
+            cross_allowed
+            and token_namespace is not None
+            and (
+                publisher_namespace == token_namespace
+                or publisher_namespace == namespace
+            )
+        ):
+            modified_resource = modified_resource.replace(
+                "{namespace}", token_namespace
+            )
+
+        if namespace is not None:
+            modified_resource = modified_resource.replace("{namespace}", namespace)
+
+        if user_id is not None:
+            modified_resource = modified_resource.replace("{userId}", user_id)
+
+        return modified_resource
 
     @staticmethod
     def str2datetime(s: str) -> datetime:
@@ -170,3 +336,57 @@ class TokenValidator:
         tz = "Z+0000" if s.endswith("Z") else ""  # Add explicit UTC timezone.
         s = s[0:23] + tz
         return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S.%fZ%z")
+
+    # TODO: write tests for validate_permissions(..)
+    @staticmethod
+    def validate_permissions(
+        permissions: List[Permission], resource: str, action: int
+    ) -> bool:
+        if permissions:
+            required_resource_items: List[str] = resource.split(":")
+            for permission in permissions:
+                has_resource_items: List[str] = permission.resource.split(":")
+
+                has_resource_items_len = len(has_resource_items)
+                required_resource_items_len = len(required_resource_items)
+                min_length: int = min(
+                    has_resource_items_len, required_resource_items_len
+                )
+
+                matches: bool = True
+                for i in range(min_length):
+                    s1: str = has_resource_items[i]
+                    s2: str = required_resource_items[i]
+                    if s1 != s2 and s1 != "*":
+                        matches = False
+                        break
+
+                if matches:
+                    if has_resource_items_len < required_resource_items_len:
+                        if has_resource_items[-1] == "*":
+                            if has_resource_items_len < 2:
+                                matches = True
+                            else:
+                                segment: str = has_resource_items[-2]
+                                if segment == "NAMESPACE" or segment == "USER":
+                                    matches = False
+                                else:
+                                    matches = True
+                        else:
+                            matches = False
+                        if not matches:
+                            continue
+                    elif has_resource_items_len > required_resource_items_len:
+                        for i in range(
+                            required_resource_items_len, has_resource_items_len
+                        ):
+                            if has_resource_items[i] != "*":
+                                matches = False
+                                break
+                        if not matches:
+                            continue
+
+                    if (permission.action & action) > 0:
+                        return True
+
+        return False
