@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from threading import RLock
 from typing import Any, Dict, List, Optional
@@ -6,6 +7,7 @@ import jwt
 
 import accelbyte_py_sdk.api.iam as iam_service
 from accelbyte_py_sdk import AccelByteSDK
+from accelbyte_py_sdk.core import Timer
 
 from app.auth.bloom_filter import BloomFilter
 from app.auth.errors import (
@@ -35,22 +37,34 @@ class TokenValidator:
         self,
         sdk: AccelByteSDK,
         publisher_namespace: Optional[str] = None,
+        fetch_interval: float = 60.0,
     ) -> None:
         self.sdk: AccelByteSDK = sdk
         self.publisher_namespace: Optional[str] = publisher_namespace
 
         self._lock: RLock = RLock()
 
+        self._cancelled: bool = False
         self._client_token: Optional[str] = None
+        self._fetch_interval: float = fetch_interval
         self._jwks: Dict[str, PublicPrivateKey] = {}
         self._revoked_token_filter: Optional[BloomFilter] = None
         self._revoked_users = {}
         self._roles = {}
+        self._task = None
+
+    def __del__(self) -> None:
+        self.cancel()
 
     async def initialize(self) -> None:
-        await self.fetch_client_token()
-        await self.fetch_jwks()
-        await self.fetch_revocation_list()
+        await self.fetch_all()
+        if self._task is None:
+            self._task = asyncio.create_task(self._fetch_all_tail())
+
+    def cancel(self) -> None:
+        if self._task:
+            self._task.cancel()
+            self._task = None
 
     def decode(
         self,
@@ -88,6 +102,17 @@ class TokenValidator:
             claims["user_id"] = sub
 
         return claims
+
+    async def fetch_all(self) -> None:
+        await self.fetch_client_token()
+        await self.fetch_jwks()  # TODO: fetch only an invalid 'kid' (key_id) is found
+        await self.fetch_revocation_list()
+        print(f"hey: {datetime.now().timestamp()}")
+
+    async def _fetch_all_tail(self) -> None:
+        while not self._cancelled:
+            await asyncio.sleep(self._fetch_interval)
+            await self.fetch_all()
 
     async def fetch_client_token(self) -> None:
         result, error = await iam_service.token_grant_v3_async(
@@ -278,7 +303,7 @@ class TokenValidator:
         permission: Optional[Permission] = None,
         namespace: Optional[str] = None,
         user_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> bool:
         claims = self.decode(token=token, **kwargs)
 
