@@ -1,8 +1,11 @@
 import logging
+import os
 import unittest
 
 from argparse import ArgumentParser
+from pathlib import Path
 
+import app_tests.auth
 import app_tests.services
 import app_tests.logger
 
@@ -13,6 +16,23 @@ def main(**kwargs):
     logger.setLevel(log_level)
     if 0 < log_level <= logging.INFO:
         logger.addHandler(logging.StreamHandler())
+
+    if env := kwargs.get("env"):
+        env_path = Path(env)
+        if env_path.exists():
+            env_contents = env_path.read_text(encoding="utf-8", errors="ignore")
+            for line in env_contents.splitlines(keepends=False):
+                parts = line.split("=", maxsplit=1)
+                if len(parts) != 2:
+                    continue
+                key, value = parts[0], parts[1]
+                if (
+                    (value.startswith('"') and value.endswith('"'))
+                    or value.startswith("'")
+                    and value.endswith("'")
+                ):
+                    value = value[1:-1]
+                os.environ[key] = value
 
     loader = unittest.TestLoader()
     runner = None
@@ -29,7 +49,12 @@ def main(**kwargs):
     if runner is None:
         runner = unittest.TextTestRunner()
 
-    suite = loader.loadTestsFromModule(app_tests.services)
+    suite = unittest.TestSuite(
+        [
+            loader.loadTestsFromModule(app_tests.auth),
+            loader.loadTestsFromModule(app_tests.services),
+        ]
+    )
     result = runner.run(suite)
 
     if not result.wasSuccessful():
@@ -47,6 +72,8 @@ def parse_args():
     )
 
     parser.add_argument("-v", "--verbose", action="count", default=1)
+
+    parser.add_argument("--env")
 
     result = vars(parser.parse_args())
 

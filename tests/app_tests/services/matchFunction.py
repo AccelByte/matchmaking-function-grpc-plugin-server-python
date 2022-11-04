@@ -1,12 +1,11 @@
+import asyncio
 import json
 import unittest
 import uuid
 
-from logging import Logger
 from typing import Optional
 
 import grpc
-import grpc_testing
 
 from google.protobuf.struct_pb2 import Struct
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -18,6 +17,7 @@ from app.proto.matchFunction_pb2 import MakeMatchesRequest, MatchResponse
 from app.proto.matchFunction_pb2_grpc import MatchFunctionStub
 from app.proto.matchFunction_pb2_grpc import add_MatchFunctionServicer_to_server
 
+from app.auth.token_validator import TokenValidator
 from app.ctypes import RuleObject
 from app.interceptors.authorization import AuthorizationServerInterceptor
 from app.services.matchFunction import AsyncMatchFunctionService
@@ -168,8 +168,7 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
         from accelbyte_py_sdk import AccelByteSDK
         from accelbyte_py_sdk.core import EnvironmentConfigRepository
         from accelbyte_py_sdk.core import InMemoryTokenRepository
-        from accelbyte_py_sdk.core import get_env_user_credentials, get_namespace
-        from app.interceptors.authorization import AuthorizationServerInterceptor
+        from accelbyte_py_sdk.core import get_env_user_credentials
 
         # arrange
         sdk = AccelByteSDK()
@@ -181,38 +180,42 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
         username, password = get_env_user_credentials()
-        namespace, error = get_namespace(sdk=sdk)
+        namespace, error = sdk.get_namespace()
         if error:
             self.fail(msg="can't find namespace")
 
         result, error = await auth_service.login_user_async(username, password, sdk=sdk)
         access_token = result.access_token
 
+        token_validator = TokenValidator(sdk=sdk)
+        await token_validator.initialize()
+
         interceptor = AuthorizationServerInterceptor(
             namespace=namespace,
             resource_name="MATCHMAKING",
-            sdk=sdk,
+            token_validator=token_validator,
+            logger=app_tests.logger.LOGGER,
         )
         server = self.create_server("[::]:50051", (interceptor,))
         add_MatchFunctionServicer_to_server(self.service, server)
 
         await server.start()
 
-        async with grpc.aio.secure_channel(
-            "localhost:50051",
-            self.create_access_token_credentials(access_token),
-        ) as channel:
-            stub = MatchFunctionStub(channel)
+        try:
+            async with grpc.aio.secure_channel(
+                "localhost:50051",
+                self.create_access_token_credentials(access_token),
+            ) as channel:
+                stub = MatchFunctionStub(channel)
 
-            # act
-            response = await stub.GetStatCodes(GetStatCodesRequest())
+                # act
+                await asyncio.sleep(10)
+                response = await stub.GetStatCodes(GetStatCodesRequest())
 
-            # assert
-            self.assertIsNotNone(response)
-            self.assertIsInstance(response, StatCodesResponse)
-            self.assertEqual(f"Bearer {access_token}", interceptor.authorization)
-
-            # cleanup
+                # assert
+                self.assertIsNotNone(response)
+                self.assertIsInstance(response, StatCodesResponse)
+        finally:
             await server.stop(grace=None)
 
     @staticmethod

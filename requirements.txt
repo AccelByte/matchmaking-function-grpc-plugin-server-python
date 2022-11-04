@@ -2,9 +2,11 @@ protobuf==3.19.4
 grpcio==1.48.1
 grpcio-reflection==1.48.1
 
-requests
-httpx
-websockets
-pyyaml
-jwt
 accelbyte-py-sdk
+bitarray
+httpx
+mmh3
+pyjwt[crypto]
+pyyaml
+requests
+websockets

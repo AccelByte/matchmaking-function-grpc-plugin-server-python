@@ -6,8 +6,6 @@ from typing import Optional
 
 import grpc.aio
 
-from grpc_reflection.v1alpha import reflection
-
 import app.logger
 
 import app.proto.matchFunction_pb2 as match_function_pb2
