@@ -16,5 +16,5 @@ class DebugLoggingServerInterceptor(grpc.aio.ServerInterceptor):
         handler_call_details: grpc.HandlerCallDetails,
     ) -> grpc.RpcMethodHandler:
         if self.logger:
-            self.logger.info(handler_call_details)
+            self.logger.info(f"method: {handler_call_details.method}")
         return await continuation(handler_call_details)

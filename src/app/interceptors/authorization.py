@@ -52,6 +52,8 @@ class AuthorizationServerInterceptor(grpc.aio.ServerInterceptor):
 
         try:
             token = authorization.removeprefix(self.BEARER_PREFIX)
+            if self.logger:
+                self.logger.info(f"validating {token}")
             if not await self.token_validator.validate(
                 token=token,
                 permission=self.required_permission,
