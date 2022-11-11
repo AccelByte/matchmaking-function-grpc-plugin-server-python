@@ -107,7 +107,6 @@ class TokenValidator:
         await self.fetch_client_token()
         await self.fetch_jwks()  # TODO: fetch only an invalid 'kid' (key_id) is found
         await self.fetch_revocation_list()
-        print(f"hey: {datetime.now().timestamp()}")
 
     async def _fetch_all_tail(self) -> None:
         while not self._cancelled:
@@ -239,12 +238,12 @@ class TokenValidator:
         origin_permissions = claims.get("permissions", [])
         origin_permissions = [
             Permission.create(
-                action=p.get("action"),
-                resource=p.get("resource"),
+                action=p.get("Action"),  # case-senstive
+                resource=p.get("Resource"),  # case-sensitive
             )
             for p in origin_permissions
         ]
-        if self.validate_permissions(
+        if origin_permissions and self.validate_permissions(
             permissions=origin_permissions,
             resource=modified_resource,
             action=permission.action,
@@ -261,7 +260,7 @@ class TokenValidator:
                     namespace_role=namespace_role, user_id=claims_user_id
                 )
                 role_namespace_permissions.extend(permissions)
-            if self.validate_permissions(
+            if role_namespace_permissions and self.validate_permissions(
                 permissions=role_namespace_permissions,
                 resource=modified_resource,
                 action=permission.action,
@@ -277,7 +276,7 @@ class TokenValidator:
                     role_id=role_id, namespace=token_namespace, user_id=user_id
                 )
                 role_permissions.extend(permissions)
-            if self.validate_permissions(
+            if role_permissions and self.validate_permissions(
                 permissions=role_permissions,
                 resource=modified_resource,
                 action=permission.action,
