@@ -4,13 +4,14 @@ import os
 
 from argparse import ArgumentParser
 from logging import Logger
-from typing import Any, Optional
+from typing import Any, List, Optional, Union
 
 import grpc.aio
 import logging_loki
 
 from opentelemetry import trace
 from opentelemetry.exporter.zipkin.proto.http import ZipkinExporter
+from opentelemetry.instrumentation.grpc import aio_server_interceptor
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -87,43 +88,51 @@ async def main(
         logger.info(f"zipkin enabled: {zipkin_endpoint}")
 
     # accelbyte
-    #   uses `APP_SECURITY_BASE_URL`, `APP_SECURITY_CLIENT_SECRET`, `APP_SECURITY_CLIENT_SECRET`, `NAMESPACE`
+    #   uses `APP_SECURITY_BASE_URL`, `APP_SECURITY_CLIENT_SECRET`, `APP_SECURITY_CLIENT_SECRET`, `APP_SECURITY_NAMESPACE`
+    ab_base_url = os.environ.get("APP_SECURITY_BASE_URL", DEFAULT_AB_BASE_URL)
+    ab_client_id = os.environ.get("APP_SECURITY_CLIENT_ID", None)
+    ab_client_secret = os.environ.get("APP_SECURITY_CLIENT_SECRET", None)
+    ab_namespace = get_env_var(key=["APP_SECURITY_NAMESPACE", "NAMESPACE"], default="accelbyte")
+    ab_resource_name = os.environ.get("APP_SECURITY_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME)
     accelbyte_sdk = AccelByteSDK()
     accelbyte_sdk.initialize(
         options={
             "config": MyConfigRepository(
-                base_url=os.environ.get("APP_SECURITY_BASE_URL", DEFAULT_AB_BASE_URL),
-                client_id=os.environ.get("APP_SECURITY_CLIENT_ID", None),
-                client_secret=os.environ.get("APP_SECURITY_CLIENT_SECRET", None),
-                namespace=os.environ.get("APP_SECURITY_NAMESPACE", os.environ.get("NAMESPACE", None)),
+                base_url=ab_base_url,
+                client_id=ab_client_id,
+                client_secret=ab_client_secret,
+                namespace=ab_namespace,
             ),
             "token": InMemoryTokenRepository(),
         }
     )
-    logger.info("accelbyte initialized")
+    logger.info(f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace} resource_name: {ab_resource_name})")
 
-    # token validator
-    #   uses `TOKEN_VALIDATOR_FETCH_INTERVAL`
-    token_validator_fetch_interval = arg2number(os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600)
-    token_validator = TokenValidator(sdk=accelbyte_sdk, fetch_interval=token_validator_fetch_interval)
-    logger.info(f"token validator initializing ({token_validator_fetch_interval}s)")
-    await token_validator.initialize()
-    logger.info("token validator initialized")
+    interceptors = [
+        # opentelemetry aio server interceptor
+        aio_server_interceptor(),
+    ]
 
-    # interceptors
-    #   uses `APP_SECURITY_RESOURCE_NAME`, `ENABLE_INTERCEPTOR_AUTH`, `ENABLE_INTERCEPTOR_DEBUG`
-    interceptors = []
+    # authorization server interceptor
+    #   uses `APP_SECURITY_NAMESPACE`, `APP_SECURITY_RESOURCE_NAME`, `ENABLE_INTERCEPTOR_AUTH`, `TOKEN_VALIDATOR_FETCH_INTERVAL`
     if arg2bool(os.environ.get("ENABLE_INTERCEPTOR_AUTH"), default=True):
+        token_validator_fetch_interval = arg2number(os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600)
+        token_validator = TokenValidator(sdk=accelbyte_sdk, fetch_interval=token_validator_fetch_interval)
+        logger.info(f"token validator initializing (fetch_interval: {token_validator_fetch_interval}s)")
+        await token_validator.initialize()
+        logger.info("token validator initialized")
+
         interceptors.append(
             AuthorizationServerInterceptor(
-                namespace=os.environ.get("NAMESPACE", DEFAULT_AB_NAMESPACE),
-                resource_name=os.environ.get(
-                    "APP_SECURITY_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME
-                ),
+                namespace=ab_namespace,
+                resource_name=ab_resource_name,
                 token_validator=token_validator,
                 logger=logger,
             )
         )
+
+    # debug logging server interceptor
+    #   uses `ENABLE_INTERCEPTOR_DEBUG`
     if arg2bool(os.environ.get("ENABLE_INTERCEPTOR_DEBUG"), default=True):
         interceptors.append(DebugLoggingServerInterceptor(logger=logger))
 
@@ -185,6 +194,17 @@ def arg2number(arg: Any, default: float = 0) -> float:
         return len(arg)
     else:
         raise NotImplementedError()
+
+
+def get_env_var(key: Union[str, List[str]], default: Optional[str] = None) -> str:
+    if isinstance(key, str):
+        return os.environ.get(key, default=default)
+    elif isinstance(key, list):
+        for k in key:
+            v = os.environ.get(k, None)
+            if v is not None and v != "" and not v.isspace():
+                return v
+        return default
 
 
 def parse_args():
