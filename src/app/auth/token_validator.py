@@ -18,7 +18,7 @@ from app.auth.errors import (
     FetchRoleError,
     InvalidTokenGrantError,
 )
-from app.auth.errors import TokenKeyError, TokenRevokedError, UserRevokedError
+from app.auth.errors import TokenKeyError, TokenPermissionError, TokenRevokedError, UserRevokedError
 from app.auth.models import Permission, Role
 
 
@@ -303,24 +303,24 @@ class TokenValidator:
         namespace: Optional[str] = None,
         user_id: Optional[str] = None,
         **kwargs,
-    ) -> bool:
+    ) -> Optional[Exception]:
         claims = self.decode(token=token, **kwargs)
 
         if claims_user_id := claims.get("user_id"):
             if self.is_user_revoked(
                 user_id=claims_user_id, issued_at=claims.get("iat")
             ):
-                raise UserRevokedError()
+                return UserRevokedError()
 
         if self.is_token_revoked(token=token):
-            raise TokenRevokedError()
+            return TokenRevokedError()
 
         if not await self.has_valid_permissions(
             claims=claims, permission=permission, namespace=namespace, user_id=user_id
         ):
-            return False
+            return TokenPermissionError()
 
-        return True
+        return None
 
     @staticmethod
     def replace_resource(

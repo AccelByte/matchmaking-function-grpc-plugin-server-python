@@ -54,13 +54,15 @@ class AuthorizationServerInterceptor(grpc.aio.ServerInterceptor):
             token = authorization.removeprefix(self.BEARER_PREFIX)
             if self.logger:
                 self.logger.info(f"validating {token}")
-            if not await self.token_validator.validate(
+
+            error = await self.token_validator.validate(
                 token=token,
                 permission=self.required_permission,
                 namespace=self.namespace,
                 user_id=None,
-            ):
-                raise self.create_aio_rpc_error(error="unauthorized call")
+            )
+            if error is not None:
+                raise self.create_aio_rpc_error(error=f"unauthorized call ({error})")
         except Exception as e:
             raise self.create_aio_rpc_error(
                 error=str(e), status_code=grpc.StatusCode.INTERNAL

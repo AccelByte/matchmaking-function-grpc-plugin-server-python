@@ -40,3 +40,7 @@ class TokenRevokedError(TokenValidationError):
 
 class UserRevokedError(TokenValidationError):
     pass
+
+
+class TokenPermissionError(TokenValidationError):
+    pass
