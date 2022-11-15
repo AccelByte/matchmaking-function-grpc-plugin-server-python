@@ -65,17 +65,26 @@ async def main(
         loki_username = os.environ.get("LOKI_USERNAME", DEFAULT_LOKI_USERNAME)
         loki_password = os.environ.get("LOKI_PASSWORD", DEFAULT_LOKI_PASSWORD)
         loki_auth = (loki_username, loki_password)
-        loki_handler = logging_loki.LokiHandler(url=loki_url, auth=loki_auth)
+        loki_handler = logging_loki.LokiHandler(url=loki_url, auth=loki_auth, version="1")
         logger.addHandler(loki_handler)
-        logger.info("loki enabled")
+        logger.info(f"loki enabled: {loki_url} ({loki_username}:****)")
+
+    if arg2bool(os.environ.get("ENABLE_LOG2STDERR"), default=False):
+        logger.addHandler(logging.StreamHandler())
+        logger.info("stderr enabled")
 
     if arg2bool(os.environ.get("ENABLE_ZIPKIN"), default=True):
         # zipkin
         #   uses `OTEL_EXPORTER_ZIPKIN_ENDPOINT`, `OTEL_EXPORTER_ZIPKIN_TIMEOUT`
+        zipkin_endpoint = os.environ.get("OTEL_EXPORTER_ZIPKIN_ENDPOINT")
         trace.get_tracer_provider().add_span_processor(
-            span_processor=BatchSpanProcessor(span_exporter=ZipkinExporter())
+            span_processor=BatchSpanProcessor(
+                span_exporter=ZipkinExporter(
+                    endpoint=zipkin_endpoint,
+                )
+            )
         )
-        logger.info("zipkin enabled")
+        logger.info(f"zipkin enabled: {zipkin_endpoint}")
 
     # accelbyte
     #   uses `APP_SECURITY_BASE_URL`, `APP_SECURITY_CLIENT_SECRET`, `APP_SECURITY_CLIENT_SECRET`, `NAMESPACE`
@@ -86,31 +95,38 @@ async def main(
                 base_url=os.environ.get("APP_SECURITY_BASE_URL", DEFAULT_AB_BASE_URL),
                 client_id=os.environ.get("APP_SECURITY_CLIENT_ID", None),
                 client_secret=os.environ.get("APP_SECURITY_CLIENT_SECRET", None),
-                namespace=os.environ.get("NAMESPACE", None),
+                namespace=os.environ.get("APP_SECURITY_NAMESPACE", os.environ.get("NAMESPACE", None)),
             ),
             "token": InMemoryTokenRepository(),
         }
     )
     logger.info("accelbyte initialized")
 
-    token_validator = TokenValidator(sdk=accelbyte_sdk)
-    logger.info("token validator initializing")
+    # token validator
+    #   uses `TOKEN_VALIDATOR_FETCH_INTERVAL`
+    token_validator_fetch_interval = arg2number(os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600)
+    token_validator = TokenValidator(sdk=accelbyte_sdk, fetch_interval=token_validator_fetch_interval)
+    logger.info(f"token validator initializing ({token_validator_fetch_interval}s)")
     await token_validator.initialize()
     logger.info("token validator initialized")
 
     # interceptors
-    #   uses `APP_SECURITY_RESOURCE_NAME`
-    interceptors = [
-        DebugLoggingServerInterceptor(logger=logger),
-        AuthorizationServerInterceptor(
-            namespace=os.environ.get("NAMESPACE", DEFAULT_AB_NAMESPACE),
-            resource_name=os.environ.get(
-                "APP_SECURITY_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME
-            ),
-            token_validator=token_validator,
-            logger=logger,
-        ),
-    ]
+    #   uses `APP_SECURITY_RESOURCE_NAME`, `ENABLE_INTERCEPTOR_AUTH`, `ENABLE_INTERCEPTOR_DEBUG`
+    interceptors = []
+    if arg2bool(os.environ.get("ENABLE_INTERCEPTOR_AUTH"), default=True):
+        interceptors.append(
+            AuthorizationServerInterceptor(
+                namespace=os.environ.get("NAMESPACE", DEFAULT_AB_NAMESPACE),
+                resource_name=os.environ.get(
+                    "APP_SECURITY_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME
+                ),
+                token_validator=token_validator,
+                logger=logger,
+            )
+        )
+    if arg2bool(os.environ.get("ENABLE_INTERCEPTOR_DEBUG"), default=True):
+        interceptors.append(DebugLoggingServerInterceptor(logger=logger))
+
     logger.info(
         "interceptors instantiated:\n- "
         + "\n- ".join([i.__class__.__name__ for i in interceptors])
@@ -151,6 +167,22 @@ def arg2bool(arg: Any, default: bool = False) -> bool:
         return arg.lower() in ("1", "true", "y", "yes")
     elif isinstance(arg, (dict, list)):
         return len(arg) > 0
+    else:
+        raise NotImplementedError()
+
+
+def arg2number(arg: Any, default: float = 0) -> float:
+    if arg is None:
+        return default
+    elif isinstance(arg, (float, int)):
+        return arg
+    elif isinstance(arg, str):
+        try:
+            return float(arg)
+        except ValueError:
+            return default
+    elif isinstance(arg, (dict, list)):
+        return len(arg)
     else:
         raise NotImplementedError()
 
