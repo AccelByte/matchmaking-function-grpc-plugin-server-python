@@ -66,7 +66,9 @@ async def main(
         loki_username = os.environ.get("LOKI_USERNAME", DEFAULT_LOKI_USERNAME)
         loki_password = os.environ.get("LOKI_PASSWORD", DEFAULT_LOKI_PASSWORD)
         loki_auth = (loki_username, loki_password)
-        loki_handler = logging_loki.LokiHandler(url=loki_url, auth=loki_auth, version="1")
+        loki_handler = logging_loki.LokiHandler(
+            url=loki_url, auth=loki_auth, version="1"
+        )
         logger.addHandler(loki_handler)
         logger.info(f"loki enabled: {loki_url} ({loki_username}:****)")
 
@@ -92,8 +94,12 @@ async def main(
     ab_base_url = os.environ.get("APP_SECURITY_BASE_URL", DEFAULT_AB_BASE_URL)
     ab_client_id = os.environ.get("APP_SECURITY_CLIENT_ID", None)
     ab_client_secret = os.environ.get("APP_SECURITY_CLIENT_SECRET", None)
-    ab_namespace = get_env_var(key=["APP_SECURITY_NAMESPACE", "NAMESPACE"], default="accelbyte")
-    ab_resource_name = os.environ.get("APP_SECURITY_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME)
+    ab_namespace = get_env_var(
+        key=["APP_SECURITY_NAMESPACE", "NAMESPACE"], default="accelbyte"
+    )
+    ab_resource_name = os.environ.get(
+        "APP_SECURITY_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME
+    )
     accelbyte_sdk = AccelByteSDK()
     accelbyte_sdk.initialize(
         options={
@@ -106,7 +112,9 @@ async def main(
             "token": InMemoryTokenRepository(),
         }
     )
-    logger.info(f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace} resource_name: {ab_resource_name})")
+    logger.info(
+        f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace} resource_name: {ab_resource_name})"
+    )
 
     interceptors = [
         # opentelemetry aio server interceptor
@@ -116,9 +124,15 @@ async def main(
     # authorization server interceptor
     #   uses `APP_SECURITY_NAMESPACE`, `APP_SECURITY_RESOURCE_NAME`, `ENABLE_INTERCEPTOR_AUTH`, `TOKEN_VALIDATOR_FETCH_INTERVAL`
     if arg2bool(os.environ.get("ENABLE_INTERCEPTOR_AUTH"), default=True):
-        token_validator_fetch_interval = arg2number(os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600)
-        token_validator = TokenValidator(sdk=accelbyte_sdk, fetch_interval=token_validator_fetch_interval)
-        logger.info(f"token validator initializing (fetch_interval: {token_validator_fetch_interval}s)")
+        token_validator_fetch_interval = arg2number(
+            os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600
+        )
+        token_validator = TokenValidator(
+            sdk=accelbyte_sdk, fetch_interval=token_validator_fetch_interval
+        )
+        logger.info(
+            f"token validator initializing (fetch_interval: {token_validator_fetch_interval}s)"
+        )
         await token_validator.initialize()
         logger.info("token validator initialized")
 

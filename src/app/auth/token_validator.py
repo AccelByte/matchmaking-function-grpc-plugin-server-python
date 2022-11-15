@@ -18,7 +18,12 @@ from app.auth.errors import (
     FetchRoleError,
     InvalidTokenGrantError,
 )
-from app.auth.errors import TokenKeyError, TokenPermissionError, TokenRevokedError, UserRevokedError
+from app.auth.errors import (
+    TokenKeyError,
+    TokenPermissionError,
+    TokenRevokedError,
+    UserRevokedError,
+)
 from app.auth.models import Permission, Role
 
 
