@@ -1,7 +1,9 @@
+Flask==2.2.2
 grpcio==1.48.1
 grpcio-reflection==1.48.1
 opentelemetry-api==1.14.0
 opentelemetry-sdk==1.14.0
+opentelemetry-exporter-prometheus==1.12.0rc1
 opentelemetry-exporter-zipkin-proto-http==1.14.0
 opentelemetry-instrumentation-grpc==0.35b0
 protobuf==3.19.4
