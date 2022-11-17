@@ -6,7 +6,7 @@ networks:
     external: true
 
 services:
-  server-app:
+  app-server:
     build:
       context: .
       dockerfile: ./Dockerfile
