@@ -1,13 +1,87 @@
-# AccelByte Plugin gRPC Architecture Demo - Server Component (Python)
+# plugin-arch-grpc-server-python
+
+> :warning: **If you are new to AccelByte Cloud Service Customization gRPC Plugin Architecture**: Start reading from `OVERVIEW.md` in `plugin-arch-grpc-dependencies` repository to get the full context.
+
+AccelByte Cloud service customization using gRPC plugin architecture - Server (Python).
 
 ## Prerequisites
 
-* docker
-* docker-compose
-* make
-* Python 3.9+
+1. Windows 10 WSL2 or Linux Ubuntu 20.04 with the following tools installed.
 
-## Environment Variables
+    a. bash
+
+    b. docker
+
+    c. docker-compose
+
+    d. make
+
+    e. python 3.9+
+
+2. AccelByte Cloud demo environment.
+
+    a. Base URL: https://demo.accelbyte.io.
+
+    b. [Create a Game Namespace](https://docs.accelbyte.io/esg/uam/namespaces.html#tutorials) if you don't have one yet. Keep the `Namespace ID`.
+
+    c. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with confidential client type and give it `read` permission to resource `NAMESPACE:{namespace}:MMV2GRPCSERVICE`. Keep the `Client ID` and `Client Secret`.
+
+## Setup
+
+Create a docker compose `.env` file based on `.env.template` file and fill in the required environment variables in `.env` file.
+
+```
+APP_SECURITY_BASE_URL=https://demo.accelbyte.io     # Base URL
+APP_SECURITY_CLIENT_ID=xxxxxxxxxx                   # Client ID
+APP_SECURITY_CLIENT_SECRET=xxxxxxxxxx               # Client Secret
+NAMESPACE=xxxxxxxxxx                                # Namespace ID
+```
+
+> :exclamation: **For the server and client**: Use the same Base URL, Client ID, Client Secret, and Namespace ID.
+
+## Developing
+
+Helper commands to make development easier.
+
+```
+make setup      # Setting up virtual environment
+make build      # Generating code from proto files
+make test       # Running tests
+make run        # Running the server (without container)
+```
+
+For more details about the command, see [Makefile](Makefile).
+
+## Building
+
+Build the project and create a docker image for the current platform in one go.
+
+```
+make build image
+```
+For more details about the command, see [Makefile](Makefile).
+
+## Running
+
+Use the following command to run the project in a container.
+
+```
+docker-compose up
+```
+
+## Advanced
+
+### Building Multi-Arch Docker Image
+
+Build the project and create a multi-arch docker image in one go.
+
+```
+make build imagex
+```
+
+For more details about the command, see [Makefile](Makefile).
+
+### Environment Variables
 
 | Environment Variable           | Description                                                                         | Default                                  |
 |--------------------------------|-------------------------------------------------------------------------------------|------------------------------------------|
@@ -34,53 +108,7 @@
 | PROMETHEUS_PREFIX              | Prometheus prefix.                                                                  | `$(camelcase APP_NAME)`                  |
 | TOKEN_VALIDATOR_FETCH_INTERVAL | How often to refetch the JWKS, Revocation List, and Role List (in seconds).         | `3600`                                   |
 
-## Make
-
-### Setting up the Virtual Environment
-
-```shell
-make setup
-```
-
-### Generate Proto Files
-
-```
-make generate
-```
-
-### Running Tests
-
-```shell
-make test
-```
-
-### Running the Server
-
-```shell
-make run
-```
-
-## Usage
-
-Run dependencies first.
-
-```shell
-docker-compose -f docker-compose-dep.yml up
-```
-
-Run the app.
-
-```shell
-docker-compose -f docker-compose-app.yml up
-```
-
-Or (re)build and then run the app.
-
-```shell
-docker-compose -f docker-compose-app.yml up --build
-```
-
-## Useful Links
+### Useful Links
 
 - [OpenTelemetry  > Instrumentation > Python](https://opentelemetry.io/docs/instrumentation/python)
 - [Prometheus > Best Practices > Metric and Label Naming](https://prometheus.io/docs/practices/naming)
