@@ -4,6 +4,8 @@ TESTS_DIR = tests
 VENV_DIR = venv
 VENV_DEV_DIR = venv-dev
 
+IMAGE_NAME := plugin-arch-grpc-server-python-app
+
 setup:
 	rm -rf ${VENV_DEV_DIR} 
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
@@ -23,12 +25,23 @@ clean:
 	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2.pyi
 	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2_grpc.py
 
-generate: clean
+proto: clean
 	docker run -t --rm -u $$(id -u):$$(id -g) -v $$(pwd):/data/ -w /data/ rvolosatovs/protoc:3.3.0 \
 		--proto_path=${PROTO_DIR}=${SOURCE_DIR}/${PROTO_DIR} \
 		--python_out=${SOURCE_DIR} \
 		--grpc-python_out=${SOURCE_DIR} \
 		${SOURCE_DIR}/${PROTO_DIR}/*.proto
+
+build: proto
+
+image:
+	docker build -t ${IMAGE_NAME} .
+
+imagex:
+	trap "docker buildx rm ${IMAGE_NAME}-builder" EXIT \
+			&& docker buildx create --name ${IMAGE_NAME}-builder --use \
+			&& docker buildx build -t ${IMAGE_NAME} --platform linux/arm64/v8,linux/amd64 . \
+			&& docker buildx build -t ${IMAGE_NAME} --load .
 
 lint:
 	rm -f lint.err

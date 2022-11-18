@@ -70,7 +70,7 @@ pipeline {
       }
       steps {
         sh "make setup"
-        sh "make generate"
+        sh "make build"
       }
     }
     // stage('Test') {
