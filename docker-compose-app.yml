@@ -1,12 +1,7 @@
 version: '3.5'
 
-networks:
-  plugin-arch-server:
-    name: plugin-arch-server
-    external: true
-
 services:
-  app-server:
+  app:
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -19,14 +14,14 @@ services:
       - NAMESPACE
       - LOKI_USERNAME
       - LOKI_PASSWORD
-      - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - LOKI_URL=http://host.docker.internal:3100/loki/api/v1/push
       - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://otel-collector:9411/api/v2/spans
     logging:
       driver: loki
       options:
-        loki-url: http://localhost:3100/loki/api/v1/push
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: "3"
-    networks:
-      - plugin-arch-server
+    extra_hosts:
+      - host.docker.internal:host-gateway
