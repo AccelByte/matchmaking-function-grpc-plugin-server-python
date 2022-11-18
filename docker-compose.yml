@@ -15,7 +15,7 @@ services:
       - LOKI_USERNAME
       - LOKI_PASSWORD
       - LOKI_URL=http://host.docker.internal:3100/loki/api/v1/push
-      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://otel-collector:9411/api/v2/spans
+      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://host.docker.internal:9411/api/v2/spans
     logging:
       driver: loki
       options:
