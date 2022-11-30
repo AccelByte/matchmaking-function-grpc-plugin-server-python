@@ -1,29 +1,14 @@
-# Copyright (c) 2022 AccelByte Inc. All Rights Reserved.
-# This is licensed software from AccelByte Inc, for limitations
-# and restrictions contact your company contract manager.
-
 FROM python:3.9-slim
-
-# Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
-
-# Install pip requirements
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
-
 WORKDIR /app
-COPY . /app
-
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
+COPY . ./
 RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
-
+# Plugin arch gRPC server port
 EXPOSE 6565
+# Prometheus /metrics web server port
 EXPOSE 8080
-
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD PYTHONPATH=/app/src python -m app --enable_reflection
+ENTRYPOINT PYTHONPATH=/app/src python -m app --enable_reflection
