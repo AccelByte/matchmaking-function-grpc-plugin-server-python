@@ -54,29 +54,45 @@ For more details about the command, see [Makefile](Makefile).
 
 ## Building
 
-Build the project and create a docker image for the current platform in one go.
+To build the application, use the following command.
 
 ```
-make build image
+make build
 ```
+
+To build and create a docker image of the application, use the following command.
+
+```
+make image
+```
+
 For more details about the command, see [Makefile](Makefile).
 
 ## Running
 
-Use the following command to run the project in a container.
+To run the docker image of the application which has been created beforehand, use the following command.
 
 ```
 docker-compose up
+```
+
+OR
+
+To build, create a docker image, and run the application in one go, use the following command.
+
+```
+docker-compose up --build
 ```
 
 ## Advanced
 
 ### Building Multi-Arch Docker Image
 
-Build the project and create a multi-arch docker image in one go.
+To create a multi-arch docker image of the project, use the following command.
 
 ```
-make build imagex
+docker run --privileged --rm tonistiigi/binfmt --install arm64     # Fix pip install issue when building arm64 image on amd64 host
+make imagex
 ```
 
 For more details about the command, see [Makefile](Makefile).
