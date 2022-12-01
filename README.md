@@ -91,7 +91,7 @@ docker-compose up --build
 To create a multi-arch docker image of the project, use the following command.
 
 ```
-docker run --privileged --rm tonistiigi/binfmt --install arm64     # Fix pip install issue when building arm64 image on amd64 host
+sudo docker run --privileged --rm tonistiigi/binfmt --install arm64     # Fix pip install issue when building arm64 image on amd64 host
 make imagex
 ```
 
