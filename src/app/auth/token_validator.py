@@ -101,6 +101,7 @@ class TokenValidator:
             key=key,
             algorithms=decode_algorithms,
             options=decode_options,
+            leeway=1,
         )
 
         if sub := claims.get("sub"):
