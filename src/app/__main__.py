@@ -160,20 +160,20 @@ async def main(
 
     if enable_interceptor_auth:
         # authorization server interceptor
-        #   uses `APP_SECURITY_BASE_URL`, `APP_SECURITY_CLIENT_SECRET`, `APP_SECURITY_CLIENT_SECRET`, `APP_SECURITY_NAMESPACE`, `APP_SECURITY_RESOURCE_NAME`, `TOKEN_VALIDATOR_FETCH_INTERVAL`
+        #   uses `AB_BASE_URL`, `AB_CLIENT_SECRET`, `AB_CLIENT_SECRET`, `AB_NAMESPACE`, `AB_RESOURCE_NAME`, `TOKEN_VALIDATOR_FETCH_INTERVAL`
         from accelbyte_py_sdk import AccelByteSDK
         from accelbyte_py_sdk.core import MyConfigRepository, InMemoryTokenRepository
         from app.auth.token_validator import TokenValidator
         from app.interceptors.authorization import AuthorizationServerInterceptor
 
-        ab_base_url = os.environ.get("APP_SECURITY_BASE_URL", DEFAULT_AB_BASE_URL)
-        ab_client_id = os.environ.get("APP_SECURITY_CLIENT_ID", None)
-        ab_client_secret = os.environ.get("APP_SECURITY_CLIENT_SECRET", None)
+        ab_base_url = os.environ.get("AB_BASE_URL", DEFAULT_AB_BASE_URL)
+        ab_client_id = os.environ.get("AB_CLIENT_ID", None)
+        ab_client_secret = os.environ.get("AB_CLIENT_SECRET", None)
         ab_namespace = get_env_var(
-            key=["APP_SECURITY_NAMESPACE", "NAMESPACE"], default="accelbyte"
+            key=["AB_NAMESPACE", "NAMESPACE"], default="accelbyte"
         )
         ab_resource_name = os.environ.get(
-            "APP_SECURITY_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME
+            "AB_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME
         )
         accelbyte_sdk = AccelByteSDK()
         accelbyte_sdk.initialize(
