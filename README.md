@@ -31,10 +31,10 @@ AccelByte Cloud service customization using gRPC plugin architecture - Server (P
 Create a docker compose `.env` file based on `.env.template` file and fill in the required environment variables in `.env` file.
 
 ```
-APP_SECURITY_BASE_URL=https://demo.accelbyte.io     # Base URL
-APP_SECURITY_CLIENT_ID=xxxxxxxxxx                   # Client ID
-APP_SECURITY_CLIENT_SECRET=xxxxxxxxxx               # Client Secret
-NAMESPACE=xxxxxxxxxx                                # Namespace ID
+AB_BASE_URL=https://demo.accelbyte.io     # Base URL
+AB_CLIENT_ID=xxxxxxxxxx                   # Client ID
+AB_CLIENT_SECRET=xxxxxxxxxx               # Client Secret
+AB_NAMESPACE=xxxxxxxxxx                   # Namespace ID
 ```
 
 > :exclamation: **For the server and client**: Use the same Base URL, Client ID, Client Secret, and Namespace ID.
@@ -102,11 +102,11 @@ For more details about the command, see [Makefile](Makefile).
 | Environment Variable           | Description                                                                         | Default                                  |
 |--------------------------------|-------------------------------------------------------------------------------------|------------------------------------------|
 | APP_NAME                       | Used as the service name and the User-Agent for AccelByte endpoints.                | `app-server`                             |
-| APP_SECURITY_BASE_URL          | AccelByte HTTP base url.                                                            | `https://demo.accelbyte.io`              |
-| APP_SECURITY_CLIENT_ID         | AccelByte Username for HTTP basic auth.                                             |                                          |
-| APP_SECURITY_CLIENT_SECRET     | AccelByte Password for HTTP basic auth.                                             |                                          |
-| APP_SECURITY_NAMESPACE         | Also checks env-var `NAMESPACE` if not found.                                       | `accelbyte`                              |
-| APP_SECURITY_RESOURCE_NAME     |                                                                                     | `MMV2GRPCSERVICE`                        |
+| AB_BASE_URL          | AccelByte HTTP base url.                                                            | `https://demo.accelbyte.io`              |
+| AB_CLIENT_ID         | AccelByte Username for HTTP basic auth.                                             |                                          |
+| AB_CLIENT_SECRET     | AccelByte Password for HTTP basic auth.                                             |                                          |
+| AB_NAMESPACE         | Also checks env-var `NAMESPACE` if not found.                                       | `accelbyte`                              |
+| AB_RESOURCE_NAME     |                                                                                     | `MMV2GRPCSERVICE`                        |
 | ENABLE_INTERCEPTOR_AUTH        |                                                                                     | `true`                                   |
 | ENABLE_INTERCEPTOR_LOGGING     |                                                                                     | `true`                                   |
 | ENABLE_INTERCEPTOR_METRICS     |                                                                                     | `true`                                   |
