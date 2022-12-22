@@ -3,3 +3,4 @@ Makefile
 venv/
 venv-dev/
 .cache/
+.env
