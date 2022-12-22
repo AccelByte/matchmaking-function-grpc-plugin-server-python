@@ -4,7 +4,7 @@ TESTS_DIR = tests
 VENV_DIR = venv
 VENV_DEV_DIR = venv-dev
 
-IMAGE_NAME := plugin-arch-grpc-server-python-app
+IMAGE_NAME := $(shell basename "$$(pwd)")-app
 
 setup:
 	rm -rf ${VENV_DEV_DIR} 

@@ -12,11 +12,15 @@ AccelByte Cloud service customization using gRPC plugin architecture - Server (P
 
     b. docker
 
-    c. docker-compose
+    c. docker-compose v2
 
-    d. make
+    d. docker loki driver
+    
+        docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
-    e. python 3.9+
+    e. make
+
+    f. python 3.9+
 
 2. AccelByte Cloud demo environment.
 
