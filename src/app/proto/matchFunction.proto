@@ -4,7 +4,13 @@
 
 syntax = "proto3";
 
-package matchfunctiongrpc;
+option csharp_namespace = "AccelByte.MatchmakingV2.MatchFunction";
+option go_package = "accelbyte.net/matchmakingv2/matchfunction";
+option java_multiple_files = true;
+option java_package = "net.accelbyte.matchmakingv2.matchfunction";
+
+package matchfunction;
+
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -28,7 +34,7 @@ message ValidateTicketRequest {
   Rules rules = 2;
 }
 message ValidateTicketResponse {
-  bool valid_ticket = 1;
+  bool valid = 1;
 }
 
 // Make Matches
@@ -71,7 +77,7 @@ message Ticket {
   }
   string ticket_id = 1;
   string match_pool = 2;
-  google.protobuf.Timestamp CreatedAt = 3;
+  google.protobuf.Timestamp   CreatedAt = 3;
   repeated PlayerData players = 4;
   google.protobuf.Struct ticket_attributes = 5;
   map<string, int64> latencies = 6;
