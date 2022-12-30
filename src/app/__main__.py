@@ -203,14 +203,15 @@ async def main(
         await token_validator.initialize()
         logger.info("token validator initialized")
 
-        interceptors.append(
-            AuthorizationServerInterceptor(
-                namespace=ab_namespace,
-                resource_name=ab_resource_name,
-                token_validator=token_validator,
-                logger=logger,
+        if os.environ.get("PLUGIN_GRPC_SERVER_AUTH_ENABLED") == "true":
+            interceptors.append(
+                AuthorizationServerInterceptor(
+                    namespace=ab_namespace,
+                    resource_name=ab_resource_name,
+                    token_validator=token_validator,
+                    logger=logger,
+                )
             )
-        )
 
     if enable_interceptor_metrics:
         import platform
