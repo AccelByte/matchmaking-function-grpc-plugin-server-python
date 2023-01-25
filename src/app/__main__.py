@@ -107,7 +107,9 @@ async def main(
                 os.environ.get("PROMETHEUS_PORT"), default=DEFAULT_PROMETHEUS_PORT
             )
         )
-        prometheus_endpoint = os.environ.get("PROMETHEUS_ENDPOINT", DEFAULT_PROMETHEUS_ENDPOINT)
+        prometheus_endpoint = os.environ.get(
+            "PROMETHEUS_ENDPOINT", DEFAULT_PROMETHEUS_ENDPOINT
+        )
         prometheus_prefix = to_camelcase(
             os.environ.get("PROMETHEUS_PREFIX", service_name)
         )
@@ -163,7 +165,7 @@ async def main(
         #   uses `AB_BASE_URL`, `AB_CLIENT_SECRET`, `AB_CLIENT_SECRET`, `AB_NAMESPACE`, `AB_RESOURCE_NAME`, `TOKEN_VALIDATOR_FETCH_INTERVAL`
         from accelbyte_py_sdk import AccelByteSDK
         from accelbyte_py_sdk.core import MyConfigRepository, InMemoryTokenRepository
-        from app.auth.token_validator import TokenValidator
+        from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
         from app.interceptors.authorization import AuthorizationServerInterceptor
 
         ab_base_url = os.environ.get("AB_BASE_URL", DEFAULT_AB_BASE_URL)
@@ -172,9 +174,7 @@ async def main(
         ab_namespace = get_env_var(
             key=["AB_NAMESPACE", "NAMESPACE"], default="accelbyte"
         )
-        ab_resource_name = os.environ.get(
-            "AB_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME
-        )
+        ab_resource_name = os.environ.get("AB_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME)
         accelbyte_sdk = AccelByteSDK()
         accelbyte_sdk.initialize(
             options={
@@ -194,22 +194,20 @@ async def main(
         token_validator_fetch_interval = arg2number(
             os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600
         )
-        token_validator = TokenValidator(
-            sdk=accelbyte_sdk, fetch_interval=token_validator_fetch_interval
+        token_validator = CachingTokenValidator(
+            sdk=accelbyte_sdk,
+            token_refresh_interval=token_validator_fetch_interval,
+            revocation_list_refresh_interval=token_validator_fetch_interval,
         )
-        logger.info(
-            f"token validator initializing (fetch_interval: {token_validator_fetch_interval}s)"
-        )
-        await token_validator.initialize()
         logger.info("token validator initialized")
 
         if os.environ.get("PLUGIN_GRPC_SERVER_AUTH_ENABLED") == "true":
             interceptors.append(
                 AuthorizationServerInterceptor(
+                    resource=f"NAMESPACE:{ab_namespace}:{ab_resource_name}",
+                    action=2,
                     namespace=ab_namespace,
-                    resource_name=ab_resource_name,
                     token_validator=token_validator,
-                    logger=logger,
                 )
             )
 

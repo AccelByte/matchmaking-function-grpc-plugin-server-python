@@ -5,7 +5,6 @@ import unittest
 from argparse import ArgumentParser
 from pathlib import Path
 
-import app_tests.auth
 import app_tests.services
 import app_tests.logger
 
@@ -51,7 +50,6 @@ def main(**kwargs):
 
     suite = unittest.TestSuite(
         [
-            loader.loadTestsFromModule(app_tests.auth),
             loader.loadTestsFromModule(app_tests.services),
         ]
     )
