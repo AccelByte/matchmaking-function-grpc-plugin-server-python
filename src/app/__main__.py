@@ -44,6 +44,7 @@ DEFAULT_PROMETHEUS_ENDPOINT: str = "/metrics"
 async def main(
     *,
     port: int,
+    enable_health_checking: bool = False,
     enable_reflection: bool = False,
     logger: Optional[Logger] = None,
     **kwargs,
@@ -239,13 +240,25 @@ async def main(
     service = AsyncMatchFunctionService(logger=logger)
     match_function_grpc.add_MatchFunctionServicer_to_server(service, server)
 
+    if enable_health_checking:
+        from grpc_health.v1 import health
+        from grpc_health.v1 import health_pb2_grpc
+
+        health_pb2_grpc.add_HealthServicer_to_server(health.aio.HealthServicer(), server)
+        logger.info("health checking enabled")
+
     if enable_reflection:
         from grpc_reflection.v1alpha import reflection
 
-        service_names = (
-            match_function_pb2.DESCRIPTOR.services_by_name["MatchFunction"].full_name,
-            reflection.SERVICE_NAME,
-        )
+        service_names = [reflection.SERVICE_NAME]
+
+        if enable_health_checking:
+            from grpc_health.v1 import health_pb2
+
+            service_names.append(health_pb2.DESCRIPTOR.services_by_name["Health"].full_name)
+
+        service_names.append(match_function_pb2.DESCRIPTOR.services_by_name["MatchFunction"].full_name)
+
         reflection.enable_server_reflection(service_names, server)
         logger.info("reflection enabled")
 
@@ -320,6 +333,14 @@ def parse_args():
         type=int,
         required=False,
         help="[P]ort",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--enable_health_checking",
+        action="store_true",
+        required=False,
+        help="Enable Server Health [C]hecking",
     )
 
     parser.add_argument(

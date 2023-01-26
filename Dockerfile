@@ -20,4 +20,4 @@ USER appuser
 EXPOSE 6565
 # Prometheus /metrics web server port
 EXPOSE 8080
-ENTRYPOINT PYTHONPATH=/app/src python -m app --enable_reflection
+ENTRYPOINT PYTHONPATH=/app/src python -m app --enable_health_checking --enable_reflection
