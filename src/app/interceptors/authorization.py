@@ -1,40 +1,29 @@
-from logging import Logger
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable
 
-import grpc
-import grpc.aio
+from grpc import HandlerCallDetails, RpcMethodHandler, StatusCode
+from grpc.aio import AioRpcError, Metadata, ServerInterceptor
 
-from app.auth.token_validator import TokenValidator
-from app.auth.models import Permission
+from accelbyte_py_sdk.token_validation import TokenValidatorProtocol
 
 
-class AuthorizationServerInterceptor(grpc.aio.ServerInterceptor):
-    BEARER_PREFIX: str = "Bearer "
-
+class AuthorizationServerInterceptor(ServerInterceptor):
     def __init__(
         self,
+        resource: str,
+        action: int,
         namespace: str,
-        resource_name: str,
-        token_validator: TokenValidator,
-        logger: Optional[Logger] = None,
+        token_validator: TokenValidatorProtocol,
     ):
-        self.namespace: str = namespace
-        self.resource_name: str = resource_name
-        self.token_validator: TokenValidator = token_validator
-        self.logger: Optional[Logger] = logger
-
-        self.required_permission: Permission = Permission.create(
-            action=2,
-            resource=f"NAMESPACE:{namespace}:{resource_name}",
-        )
+        self.resource = resource
+        self.action = action
+        self.namespace = namespace
+        self.token_validator = token_validator
 
     async def intercept_service(
         self,
-        continuation: Callable[
-            [grpc.HandlerCallDetails], Awaitable[grpc.RpcMethodHandler]
-        ],
-        handler_call_details: grpc.HandlerCallDetails,
-    ) -> grpc.RpcMethodHandler:
+        continuation: Callable[[HandlerCallDetails], Awaitable[RpcMethodHandler]],
+        handler_call_details: HandlerCallDetails,
+    ) -> RpcMethodHandler:
         if (
             authorization := next(
                 (
@@ -47,37 +36,34 @@ class AuthorizationServerInterceptor(grpc.aio.ServerInterceptor):
         ) and authorization is None:
             raise self.create_aio_rpc_error(error="no authorization token found")
 
-        if not authorization.startswith(self.BEARER_PREFIX):
+        if not authorization.startswith("Bearer "):
             raise self.create_aio_rpc_error(error="invalid authorization token format")
 
         try:
-            token = authorization.removeprefix(self.BEARER_PREFIX)
-            if self.logger:
-                self.logger.info(f"validating {token}")
-
-            error = await self.token_validator.validate(
+            token = authorization.removeprefix("Bearer ")
+            error = self.token_validator.validate_token(
                 token=token,
-                permission=self.required_permission,
+                resource=self.resource,
+                action=self.action,
                 namespace=self.namespace,
-                user_id=None,
             )
             if error is not None:
-                raise self.create_aio_rpc_error(error=f"unauthorized call ({error})")
+                raise error
         except Exception as e:
             raise self.create_aio_rpc_error(
-                error=str(e), status_code=grpc.StatusCode.INTERNAL
+                error=str(e), code=StatusCode.INTERNAL
             ) from e
 
         return await continuation(handler_call_details)
 
     @staticmethod
     def create_aio_rpc_error(
-        error: str, status_code: grpc.StatusCode = grpc.StatusCode.UNAUTHENTICATED
-    ):
-        return grpc.aio.AioRpcError(
-            status_code,
-            grpc.aio.Metadata(),
-            grpc.aio.Metadata(),
+        error: str, code: StatusCode = StatusCode.UNAUTHENTICATED
+    ) -> AioRpcError:
+        return AioRpcError(
+            code=code,
+            initial_metadata=Metadata(),
+            trailing_metadata=Metadata(),
             details=error,
             debug_error_string=error,
         )

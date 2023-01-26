@@ -7,6 +7,8 @@ from typing import Optional
 
 import grpc
 
+from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
+
 from google.protobuf.struct_pb2 import Struct
 from google.protobuf.timestamp_pb2 import Timestamp
 
@@ -17,7 +19,6 @@ from app.proto.matchFunction_pb2 import MakeMatchesRequest, MatchResponse
 from app.proto.matchFunction_pb2_grpc import MatchFunctionStub
 from app.proto.matchFunction_pb2_grpc import add_MatchFunctionServicer_to_server
 
-from app.auth.token_validator import TokenValidator
 from app.ctypes import RuleObject
 from app.interceptors.authorization import AuthorizationServerInterceptor
 from app.services.matchFunction import AsyncMatchFunctionService
@@ -187,14 +188,12 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
         result, error = await auth_service.login_user_async(username, password, sdk=sdk)
         access_token = result.access_token
 
-        token_validator = TokenValidator(sdk=sdk)
-        await token_validator.initialize()
-
+        token_validator = CachingTokenValidator(sdk=sdk)
         interceptor = AuthorizationServerInterceptor(
+            resource=f"NAMESPACE:{namespace}:MATCHMAKING",
+            action=2,
             namespace=namespace,
-            resource_name="MATCHMAKING",
             token_validator=token_validator,
-            logger=app_tests.logger.LOGGER,
         )
         server = self.create_server("[::]:50051", (interceptor,))
         add_MatchFunctionServicer_to_server(self.service, server)
