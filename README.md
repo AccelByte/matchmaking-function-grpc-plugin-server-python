@@ -1,12 +1,12 @@
 # matchmaking-function-grpc-plugin-server-python
 
-This repository contains `gRPC server` sample app (Python) for AccelByte Cloud service `matchmaking function` customization.
+This repository contains `gRPC server` sample app (Python) for AccelByte Gaming Services service `matchmaking function` customization.
 
-The `gRPC server` is a part of AccelByte Cloud service customization gRPC plugin architecture.
+The `gRPC server` is a part of AccelByte Gaming Services service customization gRPC plugin architecture.
 
 ```mermaid
 flowchart LR
-   subgraph AB Cloud Service
+   subgraph AB Gaming Services Service
    CL[gRPC Client]
    end
    subgraph External Hosting
@@ -17,7 +17,7 @@ flowchart LR
    DS --- SV
 ```
 
-> :warning: **If you are new to AccelByte Cloud service customization gRPC plugin architecture**: You may want to read `OVERVIEW.md` in the `grpc-plugin-dependencies` repository to get the overview of the architecture.
+> :warning: **If you are new to AccelByte Gaming Services service customization gRPC plugin architecture**: You may want to read `OVERVIEW.md` in the `grpc-plugin-dependencies` repository to get the overview of the architecture.
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ flowchart LR
 
    f. python 3.9+
 
-2. AccelByte Cloud demo environment.
+2. AccelByte Gaming Services demo environment.
 
    a. Base URL: https://demo.accelbyte.io.
 
@@ -116,7 +116,7 @@ The functionality of `gRPC server` methods can be tested in local development en
 
 2. Make sure this sample `gRPC server` is also up and running.
 
-3. Run the corresponding `gRPC client` as a stand in for the actual `gRPC client` in AccelByte Cloud, for example `matchmaking-function-grpc-plugin-client-go`.
+3. Run the corresponding `gRPC client` as a stand in for the actual `gRPC client` in AccelByte Gaming Services, for example `matchmaking-function-grpc-plugin-client-go`.
 
    a. Clone `matchmaking-function-grpc-plugin-client-go` repository. 
 
@@ -126,9 +126,9 @@ The functionality of `gRPC server` methods can be tested in local development en
 
 > :exclamation: **Sample `gRPC server` and `gRPC client` does not have to be implemented in the same programming language**: As long as the gRPC proto is compatible, they should be able to communicate with each other.
 
-### Test Integration with AccelByte Cloud
+### Test Integration with AccelByte Gaming Services
 
-After testing functionality in local development environment, to allow the actual `gRPC client` in AccelByte Cloud demo environment to access `gRPC server` in local development environment without requiring a public IP address, we can use [ngrok](https://ngrok.com/).
+After testing functionality in local development environment, to allow the actual `gRPC client` in AccelByte Gaming Services demo environment to access `gRPC server` in local development environment without requiring a public IP address, we can use [ngrok](https://ngrok.com/).
 
 1. Make sure `dependency services` and this sample `gRPC server` are up and running.
 
