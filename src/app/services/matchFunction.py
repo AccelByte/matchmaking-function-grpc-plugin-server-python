@@ -1,84 +1,117 @@
 import json
 
 from logging import Logger, getLogger
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from app.proto.matchFunction_pb2 import Match, Ticket
-from app.proto.matchFunction_pb2 import StatCodesResponse
-from app.proto.matchFunction_pb2 import ValidateTicketResponse
-from app.proto.matchFunction_pb2 import MatchResponse
+from grpc import StatusCode
+from grpc.aio import AioRpcError, Metadata
+
+from app.proto.matchFunction_pb2 import Ticket
+from app.proto.matchFunction_pb2 import GetStatCodesRequest, StatCodesResponse
+from app.proto.matchFunction_pb2 import ValidateTicketRequest, ValidateTicketResponse
+from app.proto.matchFunction_pb2 import EnrichTicketRequest, EnrichTicketResponse
+from app.proto.matchFunction_pb2 import MakeMatchesRequest, MatchResponse
+from app.proto.matchFunction_pb2 import BackfillMakeMatchesRequest, BackfillResponse
 from app.proto.matchFunction_pb2_grpc import MatchFunctionServicer
-
-
-def make_match_response_from_tickets(tickets: List[Ticket]):
-    # TODO(elmer): allow only unique IDs (?)
-    player_ids = [player.player_id for ticket in tickets for player in ticket.players]
-    return MatchResponse(
-        match=Match(
-            teams=[Match.Team(user_ids=player_ids)],
-            region_preferences=["any"],
-        )
-    )
 
 
 class AsyncMatchFunctionService(MatchFunctionServicer):
     def __init__(
         self,
-        ship_count_min: int = 2,
-        ship_count_max: int = 2,
         logger: Optional[Logger] = None,
     ):
-        self.ship_count_min: int = ship_count_min
-        self.ship_count_max: int = ship_count_max
-
-        self.unmatched_tickets: List[Ticket] = []
-
         self.logger = (
             logger if logger is not None else getLogger(self.__class__.__name__)
         )
 
     async def GetStatCodes(self, request, context):
         self.logger.info("received GetStatCodesRequest")
-        return StatCodesResponse(codes=["foo", "bar"])
+        assert isinstance(request, GetStatCodesRequest)
+        return StatCodesResponse(codes=[])
 
     async def ValidateTicket(self, request, context):
         self.logger.info("received ValidateTicketRequest")
+        assert isinstance(request, ValidateTicketRequest)
         return ValidateTicketResponse(valid_ticket=True)
 
+    async def EnrichTicket(self, request, context):
+        self.logger.info("received EnrichTicket")
+        assert isinstance(request, EnrichTicketRequest)
+        response = EnrichTicketResponse()
+        response.ticket.CopyFrom(request.ticket)
+        if len(response.ticket.ticket_attributes) == 0:
+            response.ticket.ticket_attributes["enrichedNumber"] = 20.0
+            self.logger.info(
+                "EnrichedTicket Attributes: {}".format(response.ticket.ticket_attributes)
+            )
+        return response
+
     async def MakeMatches(self, request_iterator, context):
+        self.logger.info("received MakeMatches (start)")
+
+        first_message: bool = True
+        matches_made: int = 0
+        rules: Any = None
+        unmatched_tickets: Optional[List[Ticket]] = None
+
         async for request in request_iterator:
-            if request.HasField("parameters"):
-                self.logger.info("received MakeMatchesRequest(parameters)")
-                parameters = request.parameters
-                rules = parameters.rules
-                json_str = rules.json
-                parameters_json = json.loads(json_str)
-                new_ship_count_min = parameters_json.get("shipCountMin")
-                new_ship_count_max = parameters_json.get("shipCountMax")
-                if (
-                    new_ship_count_min is not None
-                    and new_ship_count_max is not None
-                    and new_ship_count_min != 0
-                    and new_ship_count_max != 0
-                    and new_ship_count_min <= new_ship_count_max
-                ):
-                    self.ship_count_min = new_ship_count_min
-                    self.ship_count_max = new_ship_count_max
-                    self.logger.info(
-                        f"- updated shipCountMin: {self.ship_count_min} and shipCountMax: {self.ship_count_max}"
-                    )
-            elif request.HasField("ticket"):
-                self.logger.info("received MakeMatchesRequest(ticket)")
-                ticket = request.ticket
-                self.unmatched_tickets.append(ticket)
-                if len(self.unmatched_tickets) == self.ship_count_max:
-                    match_response = make_match_response_from_tickets(
-                        self.unmatched_tickets
-                    )
-                    self.unmatched_tickets.clear()
-                    yield match_response
-                self.logger.info(
-                    f"- unmatched ticket size: {len(self.unmatched_tickets)}"
-                )
+            assert isinstance(request, MakeMatchesRequest)
+            if first_message:
+                first_message = False
+                if not request.HasField("parameters"):
+                    error = "first message does not have the expected 'parameters' set."
+                    self.logger.error(error)
+                    raise self.create_aio_rpc_error(error, StatusCode.INVALID_ARGUMENT)
+                rules = json.loads(request.parameters.rules.json)
+                unmatched_tickets = []
             else:
-                raise ValueError(request)
+                assert rules is not None
+                assert unmatched_tickets is not None
+                if not request.HasField("ticket"):
+                    error = "message does not have the expected 'ticket' set."
+                    self.logger.error(error)
+                    raise self.create_aio_rpc_error(error, StatusCode.INVALID_ARGUMENT)
+                match_ticket = Ticket()
+                match_ticket.CopyFrom(request.ticket)
+                unmatched_tickets.append(match_ticket)
+                if len(unmatched_tickets) == 2:
+                    self.logger.info("received enough tickets to create a match!")
+                    player_ids = []
+                    response = MatchResponse()
+                    for unmatched_ticket in unmatched_tickets:
+                        for player in unmatched_ticket.players:
+                            player_ids.append(player.player_id)
+                        response.match.tickets.append(unmatched_ticket)
+                    unmatched_tickets.clear()
+                    response.match.teams.add().user_ids.extend(player_ids)
+                    response.match.region_preferences.append("any")
+                    self.logger.info("match made and sent to client!")
+                    yield response
+                    matches_made += 1
+                else:
+                    self.logger.info("not enough tickets to create a match: {}".format(len(unmatched_tickets)))
+
+        self.logger.info("received MakeMatches (end): {} match(es) made".format(matches_made))
+
+    async def BackfillMatches(self, request_iterator, context):
+        self.logger.info("received BackfillMatches (start)")
+
+        async for request in request_iterator:
+            assert isinstance(request, BackfillMakeMatchesRequest)
+            if request.HasField("backfill_ticket"):
+                response = BackfillResponse()
+                yield response
+
+        self.logger.info("received BackfillMatches (end)")
+
+    @staticmethod
+    def create_aio_rpc_error(
+        error: str, code: StatusCode = StatusCode.UNAUTHENTICATED
+    ) -> AioRpcError:
+        return AioRpcError(
+            code=code,
+            initial_metadata=Metadata(),
+            trailing_metadata=Metadata(),
+            details=error,
+            debug_error_string=error,
+        )
