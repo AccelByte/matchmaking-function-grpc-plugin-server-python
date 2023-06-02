@@ -1,3 +1,7 @@
+# pylint: disable=not-an-iterable
+# pylint: disable=no-member
+# pylint: disable=no-name-in-module
+
 import json
 
 from logging import Logger, getLogger
