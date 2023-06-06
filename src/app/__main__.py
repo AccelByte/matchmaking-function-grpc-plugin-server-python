@@ -244,7 +244,9 @@ async def main(
         from grpc_health.v1 import health
         from grpc_health.v1 import health_pb2_grpc
 
-        health_pb2_grpc.add_HealthServicer_to_server(health.aio.HealthServicer(), server)
+        health_pb2_grpc.add_HealthServicer_to_server(
+            health.aio.HealthServicer(), server
+        )
         logger.info("health checking enabled")
 
     if enable_reflection:
@@ -255,9 +257,13 @@ async def main(
         if enable_health_checking:
             from grpc_health.v1 import health_pb2
 
-            service_names.append(health_pb2.DESCRIPTOR.services_by_name["Health"].full_name)
+            service_names.append(
+                health_pb2.DESCRIPTOR.services_by_name["Health"].full_name
+            )
 
-        service_names.append(match_function_pb2.DESCRIPTOR.services_by_name["MatchFunction"].full_name)
+        service_names.append(
+            match_function_pb2.DESCRIPTOR.services_by_name["MatchFunction"].full_name
+        )
 
         reflection.enable_server_reflection(service_names, server)
         logger.info("reflection enabled")

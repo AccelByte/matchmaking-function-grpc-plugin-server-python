@@ -3,23 +3,18 @@ import json
 import unittest
 import uuid
 
-from typing import Optional
+from typing import Any, Optional
 
 import grpc
 
 from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
 
-from google.protobuf.struct_pb2 import Struct
-from google.protobuf.timestamp_pb2 import Timestamp
-
-from app.proto.matchFunction_pb2 import Match, Rules, Scope, Ticket
 from app.proto.matchFunction_pb2 import GetStatCodesRequest, StatCodesResponse
 from app.proto.matchFunction_pb2 import ValidateTicketRequest, ValidateTicketResponse
 from app.proto.matchFunction_pb2 import MakeMatchesRequest, MatchResponse
 from app.proto.matchFunction_pb2_grpc import MatchFunctionStub
 from app.proto.matchFunction_pb2_grpc import add_MatchFunctionServicer_to_server
 
-from app.ctypes import RuleObject
 from app.interceptors.authorization import AuthorizationServerInterceptor
 from app.services.matchFunction import AsyncMatchFunctionService
 from app.utils import aiterize
@@ -49,12 +44,11 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_stat_codes_returns_stat_codes_response(self):
         # arrange
-        rule_obj = RuleObject(shipCountMin=2, shipCountMax=2)
-        rule_json = json.dumps(rule_obj.__dict__)
-        request = GetStatCodesRequest(
-            rules=Rules(
-                json=rule_json,
-            ),
+        request = GetStatCodesRequest()
+        request.rules.json = json.dumps(
+            {
+                "foo": "bar"
+            }
         )
 
         # act
@@ -66,39 +60,18 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_validate_ticket_returns_validate_ticket_response(self):
         # arrange
-        created_at = Timestamp()
-        created_at.GetCurrentTime()
-        player_attributes = Struct()
-        player_attributes.update(
-            {
-                "bar": "bar",
-            }
-        )
-        players = [
-            Ticket.PlayerData(
-                player_id="foo",
-                attributes=player_attributes,
-            )
-        ]
-        ticket_attributes = Struct()
-        ticket_attributes.update(
-            {
-                "foo": "foo",
-            }
-        )
-        request = ValidateTicketRequest(
-            ticket=Ticket(
-                ticket_id="foo",
-                match_pool="foo",
-                CreatedAt=created_at,
-                players=players,
-                ticket_attributes=ticket_attributes,
-                latencies={
-                    "foo": 0,
-                },
-            ),
-            rules=Rules(json=json.dumps({})),
-        )
+        request = ValidateTicketRequest()
+        request.ticket.ticket_id = "foo"
+        request.ticket.match_pool = "foo"
+        request.ticket.CreatedAt.GetCurrentTime()
+        player = request.ticket.players.add()
+        player.player_id = "foo"
+        player.attributes["bar"] = "bar"
+        request.ticket.ticket_attributes["foo"] = "foo"
+        request.ticket.latencies["foo"] = 0
+        request.ticket.party_session_id = "foo"
+        request.ticket.namespace = "foo"
+        request.rules.json = json.dumps({})
 
         # act
         response = await self.service.ValidateTicket(request, None)
@@ -109,45 +82,34 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_make_matches_accepts_make_matches_parameters(self):
         # arrange
-        rules_ship_count_min, rules_ship_count_max = 1, 10
-        request = self.create_make_matches_request_parameters(
-            rules_ship_count_min=rules_ship_count_min,
-            rules_ship_count_max=rules_ship_count_max,
-        )
-        requests = [request]
+        request = self.create_make_matches_request_parameters({})
 
-        async for response in self.service.MakeMatches(aiterize(requests), None):
-            self.fail(msg="match created with not enough players")
-        else:
+        # act
+        async for _ in self.service.MakeMatches(aiterize([request]), None):
             # assert
-            self.assertEqual(rules_ship_count_min, self.service.ship_count_min)
-            self.assertEqual(rules_ship_count_max, self.service.ship_count_max)
+            self.fail(msg="match created with not enough players")
 
     async def test_make_matches_ignores_invalid_make_matches_parameters(self):
         # arrange
-        request = self.create_make_matches_request_parameters(
-            rules_ship_count_min=0,
-            rules_ship_count_max=0,
-        )  # invalid: min && max must be non-zero
-        requests = [request]
+        request = MakeMatchesRequest()
 
-        current_ship_count_min = self.service.ship_count_min
-        current_ship_count_max = self.service.ship_count_max
-        async for response in self.service.MakeMatches(aiterize(requests), None):
-            self.fail(msg="match created with not enough players")
-        else:
-            # assert
-            self.assertEqual(current_ship_count_min, self.service.ship_count_min)
-            self.assertEqual(current_ship_count_max, self.service.ship_count_max)
+        # act
+        with self.assertRaises(grpc.aio.AioRpcError):
+            async for _ in self.service.MakeMatches(aiterize([request]), None):
+                # assert
+                self.fail(msg="match function service accepted message without 'parameters' set")
 
     async def test_make_matches_returns_match_response(self):
         # arrange
+        request_parameters = self.create_make_matches_request_parameters({})
+
+        request_ticket1 = self.create_single_player_make_matches_request_ticket()
+        request_ticket2 = self.create_single_player_make_matches_request_ticket()
+
         requests = [
-            self.create_make_matches_request_parameters(
-                rules_ship_count_min=2, rules_ship_count_max=2
-            ),
-            self.create_single_player_make_matches_request_ticket(player_id="player1"),
-            self.create_single_player_make_matches_request_ticket(player_id="player2"),
+            request_parameters,
+            request_ticket1,
+            request_ticket2,
         ]
 
         # act
@@ -219,22 +181,13 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
 
     @staticmethod
     def create_make_matches_request_parameters(
-        rules_ship_count_min: int,
-        rules_ship_count_max: int,
+        rule_obj: Any,
         scope_ab_trace_id: str = "foo",
     ):
-        rule_obj = RuleObject(
-            shipCountMin=rules_ship_count_min, shipCountMax=rules_ship_count_max
-        )
-        rule_json = json.dumps(rule_obj.__dict__)
-        return MakeMatchesRequest(
-            parameters=MakeMatchesRequest.MakeMatchesParameters(
-                scope=Scope(
-                    ab_trace_id=scope_ab_trace_id,
-                ),
-                rules=Rules(json=rule_json),
-            )
-        )
+        result = MakeMatchesRequest()
+        result.parameters.scope.ab_trace_id = scope_ab_trace_id
+        result.parameters.rules.json = json.dumps(rule_obj)
+        return result
 
     @staticmethod
     def create_single_player_make_matches_request_ticket(
@@ -244,16 +197,8 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
             ticket_id = uuid.uuid4().__str__()
         if player_id is None:
             player_id = uuid.uuid4().__str__()
-        created_at = Timestamp()
-        created_at.GetCurrentTime()
-        return MakeMatchesRequest(
-            ticket=Ticket(
-                ticket_id=ticket_id,
-                CreatedAt=created_at,
-                players=[
-                    Ticket.PlayerData(
-                        player_id=player_id,
-                    )
-                ],
-            )
-        )
+        result = MakeMatchesRequest()
+        result.ticket.ticket_id = ticket_id
+        result.ticket.CreatedAt.GetCurrentTime()
+        result.ticket.players.add().player_id = player_id
+        return result
