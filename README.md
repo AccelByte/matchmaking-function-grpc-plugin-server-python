@@ -1,9 +1,5 @@
 # matchmaking-function-grpc-plugin-server-python
 
-This repository contains `gRPC server` sample app (Python) for AccelByte Gaming Services service `matchmaking function` customization.
-
-The `gRPC server` is a part of AccelByte Gaming Services service customization gRPC plugin architecture.
-
 ```mermaid
 flowchart LR
    subgraph AB Gaming Services Service
@@ -17,15 +13,12 @@ flowchart LR
    DS --- SV
 ```
 
-`AccelByte Gaming Services` capabilities can be extended using custom functions implemented in a `gRPC server`.
-If configured, custom functions in the `gRPC server` will be called by `AccelByte Gaming Services` instead of the default function.
-The `gRPC server` and the `gRPC client` can actually communicate directly.
-However, additional services are necessary to provide **security**, **reliability**, **scalability**, and **observability**. 
-We call these services as `dependency services`.
-The [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository is provided as an example of what these `dependency services` may look like. 
-It contains a docker compose which consists of these `dependency services`.
+`AccelByte Gaming Services` capabilities can be extended using custom functions implemented in a `gRPC server`. If configured, custom functions in the `gRPC server` will be called by `AccelByte Gaming Services` instead of the default function.
 
-> :warning: **If you are new to AccelByte Gaming Services service customization gRPC plugin architecture**: You may want to read `OVERVIEW.md` in the `grpc-plugin-dependencies` repository to get the overview of the architecture.
+The `gRPC server` and the `gRPC client` can actually communicate directly. However, additional services are necessary to provide **security**, **reliability**, **scalability**, and **observability**. We call these services as `dependency services`. The [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository is provided as an example of what these `dependency services` may look like. It
+contains a docker compose which consists of these `dependency services`.
+
+> :warning: **grpc-plugin-dependencies is provided as example for local development purpose only:** The dependency services in the actual gRPC server deployment may not be exactly the same.
 
 ## Overview
 
@@ -45,9 +38,9 @@ in [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependenc
 
    b. make
 
-   c. docker
+   c. docker v23.x
 
-   d. docker-compose v2
+   d. docker-compose v2.x
 
    e. docker loki driver
     
@@ -78,19 +71,6 @@ PLUGIN_GRPC_SERVER_AUTH_ENABLED=false     # Enable or disable access token and p
 ```
 
 > :exclamation: **For the server and client**: Use the same Base URL, Client ID, Client Secret, and Namespace ID.
-
-## Developing
-
-Helper commands to make development easier.
-
-```
-make setup      # Setting up virtual environment
-make build      # Generating code from proto files
-make test       # Running tests
-make run        # Running the server (without container)
-```
-
-For more details about the command, see [Makefile](Makefile).
 
 ## Building
 
@@ -138,7 +118,7 @@ The functionality of `gRPC server` methods can be tested in local development en
    docker-compose up --build
    ```
    
-3. Open `postman`, create a new `gRPC request`, and enter `localhost:10000` as server URL. 
+3. Open `postman`, create a new `gRPC request` (tutorial [here](https://blog.postman.com/postman-now-supports-grpc/)), and enter `localhost:10000` as server URL.
 
    > :exclamation: We are essentially accessing the `gRPC server` through an `Envoy` proxy which is a part of `dependency services`.
 
@@ -172,7 +152,7 @@ The functionality of `gRPC server` methods can be tested in local development en
    
 7. You can do step *6* multiple times until the number of player met and find matches, in our case it is 2 players.
 
-8. If successful, you will receive response (down stream) in `postman` similir to `json` sample below
+8. If successful, you will receive response (down stream) in `postman` similar to `json` sample below
 
    ```json
    {
@@ -193,9 +173,6 @@ The functionality of `gRPC server` methods can be tested in local development en
        }
    }
    ```
-
-> :exclamation: **Sample `gRPC server` and `gRPC client` does not have to be implemented in the same programming language
-> **: As long as the gRPC proto is compatible, they should be able to communicate with each other.
 
 ### Test Integration with AccelByte Gaming Services
 
@@ -235,7 +212,7 @@ local development environment without requiring a public IP address, we can use 
    export AB_CLIENT_ID='xxxxxxxxxx'
    export AB_CLIENT_SECRET='xxxxxxxxxx'
    export AB_NAMESPACE='accelbyte'
-   export NGROK_URL='tcp://0.tcp.ap.ngrok.io:xxxxx'
+   export GRPC_SERVER_URL='http://0.tcp.ap.ngrok.io:xxxxx'
    bash demo.sh
    ```
  
@@ -249,6 +226,19 @@ To create a multi-arch docker image of the project, use the following command.
 
 ```
 make imagex
+```
+
+For more details about the command, see [Makefile](Makefile).
+
+### Helper Commands
+
+Helper commands to make development easier.
+
+```
+make setup      # Setting up virtual environment
+make build      # Generating code from proto files
+make test       # Running tests
+make run        # Running the server (without container)
 ```
 
 For more details about the command, see [Makefile](Makefile).
