@@ -5,7 +5,7 @@ flowchart LR
    subgraph AB Gaming Services Service
    CL[gRPC Client]
    end
-   subgraph External Hosting
+   subgraph gRPC Server Deployment
    SV["gRPC Server\n(YOU ARE HERE)"]
    DS[Dependency Services]
    CL --- DS
@@ -22,9 +22,9 @@ contains a docker compose which consists of these `dependency services`.
 
 ## Overview
 
-This repository contains `sample matchmaking function gRPC server app` written in `Python`,
-it provides simple custom matchmaking function implementation for matchmaking service in AccelByte Gaming Services. 
-It will simply match 2 or any configured number of players coming into the function.
+This repository contains `sample matchmaking function gRPC server app` written in `Python`, It provides simple custom
+matchmaking function implementation for matchmaking service in `AccelByte Gaming Services`. 
+It will simply match 2 players coming into the function.
 
 This sample app also shows how this `gRPC server` can be instrumented for better observability.
 It is configured by default to send metrics, traces, and logs to the observability `dependency services` 
@@ -44,11 +44,25 @@ in [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependenc
 
    e. docker loki driver
     
+      ```
       docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+      ```
 
    f. python 3.9+
 
-2. AccelByte Gaming Services demo environment.
+   g. git
+
+   h. [ngrok](https://ngrok.com/)
+
+   i. [postman](https://www.postman.com/)
+
+2. A local copy of [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+
+   ```
+   git clone https://github.com/AccelByte/grpc-plugin-dependencies.git
+   ```
+
+3. Access to `AccelByte Gaming Services` demo environment.
 
    a. Base URL: https://demo.accelbyte.io.
 
@@ -56,49 +70,39 @@ in [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependenc
 
    c. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with confidential client type with the following permission. Keep the `Client ID` and `Client Secret`.
 
-      - NAMESPACE:{namespace}:MMV2GRPCSERVICE - READ
+      - NAMESPACE:{namespace}:MMV2GRPCSERVICE [READ]
 
 ## Setup
 
-Create a docker compose `.env` file based on `.env.template` file and fill in the required environment variables in `.env` file.
+To be able to run this sample app, you will need to follow these setup steps.
 
-```
-AB_BASE_URL=https://demo.accelbyte.io     # Base URL
-AB_CLIENT_ID=xxxxxxxxxx                   # Client ID
-AB_CLIENT_SECRET=xxxxxxxxxx               # Client Secret
-AB_NAMESPACE=xxxxxxxxxx                   # Namespace ID
-PLUGIN_GRPC_SERVER_AUTH_ENABLED=false     # Enable or disable access token and permission check
-```
+1. Create a docker compose `.env` file by copying the content of [.env.template](.env.template) file.
+2. Fill in the required environment variables in `.env` file as shown below.
 
-> :exclamation: **For the server and client**: Use the same Base URL, Client ID, Client Secret, and Namespace ID.
+   ```
+   AB_BASE_URL=https://demo.accelbyte.io      # Base URL of AccelByte Gaming Services demo environment
+   AB_CLIENT_ID='xxxxxxxxxx'         # Client ID from the Prerequisites section
+   AB_CLIENT_SECRET='xxxxxxxxxx'     # Client Secret from the Prerequisites section
+   AB_NAMESPACE='xxxxxxxxxx'                  # Namespace ID from the Prerequisites section
+   PLUGIN_GRPC_SERVER_AUTH_ENABLED=false      # Enable or disable access token and permission verification
+   ```
+
+   > :warning: **Keep PLUGIN_GRPC_SERVER_AUTH_ENABLED=false for now**: It is currently not
+   supported by `AccelByte Gaming Services`, but it will be enabled later on to improve security. If it is
+   enabled, the gRPC server will reject any calls from gRPC clients without proper authorization
+   metadata.
 
 ## Building
 
-To build the application, use the following command.
+To build this sample app, use the following command.
 
 ```
 make build
 ```
 
-To build and create a docker image of the application, use the following command.
-
-```
-make image
-```
-
-For more details about the command, see [Makefile](Makefile).
-
 ## Running
 
-To run the docker image of the application which has been created beforehand, use the following command.
-
-```
-docker-compose up
-```
-
-OR
-
-To build, create a docker image, and run the application in one go, use the following command.
+To (build and) run this sample app in a container, use the following command.
 
 ```
 docker-compose up --build
@@ -110,9 +114,10 @@ docker-compose up --build
 
 The functionality of `gRPC server` methods can be tested in local development environment.
 
-1. Start the `dependency services` by following the `README.md` in the [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+1. Run the `dependency services` by following the `README.md` in the [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+   > :warning: **Make sure to start dependency services with mTLS disabled for now**: It is currently not supported by `AccelByte Gaming Services`, but it will be enabled later on to improve security. If it is enabled, the gRPC client calls without mTLS will be rejected.
 
-2. Start this `gRPC server` sample app by using command below.
+2. Run this `gRPC server` sample app by using command below.
 
    ```shell
    docker-compose up --build
@@ -120,7 +125,7 @@ The functionality of `gRPC server` methods can be tested in local development en
    
 3. Open `postman`, create a new `gRPC request` (tutorial [here](https://blog.postman.com/postman-now-supports-grpc/)), and enter `localhost:10000` as server URL.
 
-   > :exclamation: We are essentially accessing the `gRPC server` through an `Envoy` proxy which is a part of `dependency services`.
+   > :exclamation: We are essentially accessing the `gRPC server` through an `Envoy` proxy in `dependency services`.
 
 4. In `postman`, continue by selecting `MakeMatches` grpc stream method and click `Invoke` button, this will start stream connection to grpc server sample app.
 
@@ -177,12 +182,13 @@ The functionality of `gRPC server` methods can be tested in local development en
 ### Test Integration with AccelByte Gaming Services
 
 After testing functionality in local development environment,
-to allow the actual `gRPC client` in AccelByte Gaming Services demo environment to access `gRPC server` in
+to allow the actual `gRPC client` in `AccelByte Gaming Services` demo environment to access `gRPC server` in
 local development environment without requiring a public IP address, we can use [ngrok](https://ngrok.com/).
 
-1. Start the `dependency services` by following the `README.md` in the [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+1. Run the `dependency services` by following the `README.md` in the [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+   > :warning: **Make sure to start dependency services with mTLS disabled for now**: It is currently not supported by `AccelByte Gaming Services`, but it will be enabled later on to improve security. If it is enabled, the gRPC client calls without mTLS will be rejected.
 
-2. Start this `gRPC server` sample app by using command below.
+2. Run this `gRPC server` sample app by using command below.
 
    ```shell
    docker-compose up
@@ -196,39 +202,39 @@ local development environment without requiring a public IP address, we can use 
    make ngrok NGROK_AUTHTOKEN=xxxxxxxxxxx
    ```
 
-5. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with confidential client type with the following permissions. Keep the `Client ID` and `Client Secret` for running the [demo.sh](demo.sh) script after this.
+5. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with `confidential` client type with the following permissions. Keep the `Client ID` and `Client Secret`.
 
-   - NAMESPACE:{namespace}:MATCHMAKING:RULES - CREATE, READ, UPDATE, DELETE
-   - NAMESPACE:{namespace}:MATCHMAKING:FUNCTIONS - CREATE, READ, UPDATE, DELETE
-   - NAMESPACE:{namespace}:MATCHMAKING:POOL - CREATE, READ, UPDATE, DELETE
-   - NAMESPACE:{namespace}:MATCHMAKING:TICKET - CREATE, READ, UPDATE, DELETE
-   - ADMIN:NAMESPACE:{namespace}:INFORMATION:USER:* - CREATE, READ, UPDATE, DELETE
-   - ADMIN:NAMESPACE:{namespace}:SESSION:CONFIGURATION:* - CREATE, READ, UDPATE, DELETE
+   - NAMESPACE:{namespace}:MATCHMAKING:RULES [CREATE, READ, UPDATE, DELETE]
+   - NAMESPACE:{namespace}:MATCHMAKING:FUNCTIONS [CREATE, READ, UPDATE, DELETE]
+   - NAMESPACE:{namespace}:MATCHMAKING:POOL [CREATE, READ, UPDATE, DELETE]
+   - NAMESPACE:{namespace}:MATCHMAKING:TICKET [CREATE, READ, UPDATE, DELETE]
+   - ADMIN:NAMESPACE:{namespace}:INFORMATION:USER:* [CREATE, READ, UPDATE, DELETE]
+   - ADMIN:NAMESPACE:{namespace}:SESSION:CONFIGURATION:* [CREATE, READ, UPDATE, DELETE]
+
+   > :warning: **Oauth Client created in this step is different from the one from Prerequisites section:** It is required by [demo.sh](demo.sh) script in the next step to register the `gRPC Server` URL and also to create and delete test users.
    
-6. Run the [demo.sh](demo.sh) script to simulate the matchmaking flow which calls this sample `gRPC server` using the `Client ID` and `Client Secret` created in the previous step. Pay attention to sample `gRPC server` log when matchmaking flow is running. `gRPC Server` methods should get called when creating match tickets and it should group players in twos.
+6. Run the [demo.sh](demo.sh) script to simulate the matchmaking flow which calls this sample `gRPC server` using the `Client ID` and `Client Secret` created in the previous step. Pay attention to sample `gRPC server` console log when matchmaking flow is running. `gRPC Server` methods should get called when creating match tickets and it should group players in twos.
 
    ```
    export AB_BASE_URL='https://demo.accelbyte.io'
-   export AB_CLIENT_ID='xxxxxxxxxx'
-   export AB_CLIENT_SECRET='xxxxxxxxxx'
-   export AB_NAMESPACE='accelbyte'
-   export GRPC_SERVER_URL='http://0.tcp.ap.ngrok.io:xxxxx'
+   export AB_CLIENT_ID='xxxxxxxxxx'          # Use Client ID from the previous step
+   export AB_CLIENT_SECRET='xxxxxxxxxx'      # Use Client Secret from the previous step    
+   export AB_NAMESPACE='accelbyte'           # Use your Namespace ID
+   export GRPC_SERVER_URL='http://0.tcp.ap.ngrok.io:xxxxx'  # Use your ngrok forwarding URL
    bash demo.sh
    ```
  
 > :warning: **Ngrok free plan has some limitations**: You may want to use paid plan if the traffic is high.
 
+## Pushing
+
+To build and push this sample app multi-arch container image to AWS ECR, use the following command.
+
+```
+make imagex_push REPO_URL=xxxxxxxxxx.dkr.ecr.us-west-2.amazonaws.com/accelbyte/justice/development/extend/xxxxxxxxxx/xxxxxxxxxx IMAGE_TAG=v0.0.1
+```
+
 ## Advanced
-
-### Building Multi-Arch Docker Image
-
-To create a multi-arch docker image of the project, use the following command.
-
-```
-make imagex
-```
-
-For more details about the command, see [Makefile](Makefile).
 
 ### Helper Commands
 
