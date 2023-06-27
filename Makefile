@@ -8,16 +8,14 @@ IMAGE_NAME := $(shell basename "$$(pwd)")-app
 
 setup:
 	rm -rf ${VENV_DEV_DIR} 
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'python -m venv ${VENV_DEV_DIR} \
-					&& ${VENV_DEV_DIR}/bin/pip install --upgrade pip \
-					&& ${VENV_DEV_DIR}/bin/pip install -r requirements-dev.txt'
+	python3.9 -m venv ${VENV_DEV_DIR} \
+			&& ${VENV_DEV_DIR}/bin/pip install --upgrade pip \
+			&& ${VENV_DEV_DIR}/bin/pip install -r requirements-dev.txt
 
 	rm -rf ${VENV_DIR}
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'python -m venv ${VENV_DIR} \
-					&& ${VENV_DIR}/bin/pip install --upgrade pip \
-					&& ${VENV_DIR}/bin/pip install -r requirements.txt'
+	python3.9 -m venv ${VENV_DIR} \
+			&& ${VENV_DIR}/bin/pip install --upgrade pip \
+			&& ${VENV_DIR}/bin/pip install -r requirements.txt
 
 clean:
 	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_grpc.py
