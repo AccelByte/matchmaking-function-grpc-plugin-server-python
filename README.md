@@ -48,7 +48,7 @@ in [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependenc
       docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
       ```
 
-   f. python 3.9+
+   f. python 3.9
 
    g. git
 
