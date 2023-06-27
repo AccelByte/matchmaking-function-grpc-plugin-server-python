@@ -260,7 +260,7 @@ For more details about the command, see [Makefile](Makefile).
 | AB_NAMESPACE                   | Also checks env-var `NAMESPACE` if not found.                                       | `accelbyte`                              |
 | AB_RESOURCE_NAME               |                                                                                     | `MMV2GRPCSERVICE`                        |
 | ENABLE_INTERCEPTOR_AUTH        |                                                                                     | `true`                                   |
-| ENABLE_INTERCEPTOR_LOGGING     |                                                                                     | `true`                                   |
+| ENABLE_INTERCEPTOR_LOGGING     |                                                                                     | `false`                                   |
 | ENABLE_INTERCEPTOR_METRICS     |                                                                                     | `true`                                   |
 | ENABLE_LOKI                    |                                                                                     | `true`                                   |
 | ENABLE_PROMETHEUS              |                                                                                     | `true`                                   |

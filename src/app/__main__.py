@@ -60,7 +60,7 @@ async def main(
         os.environ.get("ENABLE_INTERCEPTOR_AUTH"), default=True
     )
     enable_interceptor_logging = arg2bool(
-        os.environ.get("ENABLE_INTERCEPTOR_LOGGING"), default=True
+        os.environ.get("ENABLE_INTERCEPTOR_LOGGING"), default=False
     )
     enable_interceptor_metrics = arg2bool(
         os.environ.get("ENABLE_INTERCEPTOR_METRICS"), default=True
