@@ -223,6 +223,9 @@ local development environment without requiring a public IP address, we can use 
    export GRPC_SERVER_URL='http://0.tcp.ap.ngrok.io:xxxxx'  # Use your ngrok forwarding URL
    bash demo.sh
    ```
+
+   > :warning: **Make sure demo.sh has Unix line-endings (LF)**: If this repository was cloned in Windows for example, the `demo.sh` may have Windows line-endings (CRLF) instead. In this case, use tools like `dos2unix` to change the line-endings to Unix (LF).
+   Invalid line-endings may cause errors such as `demo.sh: line 2: $'\r': command not found`.
  
 > :warning: **Ngrok free plan has some limitations**: You may want to use paid plan if the traffic is high.
 
