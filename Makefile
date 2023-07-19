@@ -42,6 +42,13 @@ imagex:
 	docker buildx build -t ${IMAGE_NAME} --load .
 	#docker buildx rm ${IMAGE_NAME}-builder
 
+imagex_push:
+	@test -n "$(IMAGE_TAG)" || (echo "IMAGE_TAG is not set (e.g. 'v0.1.0', 'latest')"; exit 1)
+	@test -n "$(REPO_URL)" || (echo "REPO_URL is not set"; exit 1)
+	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use
+	docker buildx build -t ${REPO_URL}:${IMAGE_TAG} --platform linux/arm64/v8,linux/amd64 --push .
+	docker buildx rm --keep-state $(BUILDER)
+
 lint:
 	rm -f lint.err
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip -e PYLINTHOME=/data/.cache/pylint  --entrypoint /bin/sh python:3.9-slim \
