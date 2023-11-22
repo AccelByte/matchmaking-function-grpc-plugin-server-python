@@ -278,12 +278,9 @@ For more details about the command, see [Makefile](Makefile).
 | ENABLE_INTERCEPTOR_AUTH        |                                                                                     | `true`                                   |
 | ENABLE_INTERCEPTOR_LOGGING     |                                                                                     | `false`                                   |
 | ENABLE_INTERCEPTOR_METRICS     |                                                                                     | `true`                                   |
-| ENABLE_LOKI                    |                                                                                     | `true`                                   |
 | ENABLE_PROMETHEUS              |                                                                                     | `true`                                   |
 | ENABLE_ZIPKIN                  |                                                                                     | `true`                                   |
 | LOKI_URL                       |                                                                                     | `http://localhost:3100/loki/api/v1/push` |
-| LOKI_USERNAME                  | Loki Username for HTTP basic auth.                                                  |                                          |
-| LOKI_PASSWORD                  | Loki Password for HTTP basic auth.                                                  |                                          |
 | OTEL_EXPORTER_ZIPKIN_ENDPOINT  | Endpoint for Zipkin traces.                                                         | `http://localhost:9411/api/v2/spans`     |
 | OTEL_EXPORTER_ZIPKIN_TIMEOUT   | Maximum time (in milliseconds) the Zipkin exporter will wait for each batch export. | `10000`                                  |
 | PROMETHEUS_ADDR                | Prometheus HTTP server address.                                                     | `0.0.0.0`                                |

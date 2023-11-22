@@ -32,10 +32,6 @@ DEFAULT_AB_BASE_URL: str = "https://demo.accelbyte.io"
 DEFAULT_AB_NAMESPACE: str = "accelbyte"
 DEFAULT_AB_RESOURCE_NAME: str = "MMV2GRPCSERVICE"
 
-DEFAULT_LOKI_URL: str = "http://localhost:3100/loki/api/v1/push"
-DEFAULT_LOKI_USERNAME: str = ""
-DEFAULT_LOKI_PASSWORD: str = ""
-
 DEFAULT_PROMETHEUS_ADDR: str = "0.0.0.0"
 DEFAULT_PROMETHEUS_PORT: int = 8080
 DEFAULT_PROMETHEUS_ENDPOINT: str = "/metrics"
@@ -51,7 +47,6 @@ async def main(
 ) -> None:
     logger = logger if logger is not None else app.logger.DEFAULT_LOGGER
 
-    enable_loki = arg2bool(os.environ.get("ENABLE_LOKI"), default=True)
     enable_log2stderr = arg2bool(os.environ.get("ENABLE_LOG2STDERR"), default=False)
     enable_prometheus = arg2bool(os.environ.get("ENABLE_PROMETHEUS"), default=True)
     enable_zipkin = arg2bool(os.environ.get("ENABLE_ZIPKIN"), default=True)
@@ -73,21 +68,6 @@ async def main(
     otel_metric_readers = []
     otel_tracer_provider = TracerProvider(resource=otel_resource)
     trace.set_tracer_provider(tracer_provider=otel_tracer_provider)
-
-    if enable_loki:
-        # loki
-        #   uses `LOKI_URL`, `LOKI_USERNAME`, `LOKI_PASSWORD`
-        import logging_loki
-
-        loki_url = os.environ.get("LOKI_URL", DEFAULT_LOKI_URL)
-        loki_username = os.environ.get("LOKI_USERNAME", DEFAULT_LOKI_USERNAME)
-        loki_password = os.environ.get("LOKI_PASSWORD", DEFAULT_LOKI_PASSWORD)
-        loki_auth = (loki_username, loki_password) if loki_username else None
-        loki_handler = logging_loki.LokiHandler(
-            url=loki_url, auth=loki_auth, version="1"
-        )
-        logger.addHandler(loki_handler)
-        logger.info(f"loki enabled: {loki_url} ({loki_username}:****)")
 
     if enable_log2stderr:
         logger.addHandler(logging.StreamHandler())
