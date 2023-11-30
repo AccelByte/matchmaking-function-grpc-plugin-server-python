@@ -6,6 +6,8 @@ VENV_DEV_DIR = venv-dev
 
 IMAGE_NAME := $(shell basename "$$(pwd)")-app
 
+.PHONY: test
+
 setup:
 	rm -rf ${VENV_DEV_DIR} 
 	python3.9 -m venv ${VENV_DEV_DIR} \
@@ -52,8 +54,11 @@ imagex_push:
 lint:
 	rm -f lint.err
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip -e PYLINTHOME=/data/.cache/pylint  --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}/bin/python -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' \
-					|| touch lint.err
+			-c 'python3.9 -m venv ${VENV_DEV_DIR}-docker \
+					&& ${VENV_DEV_DIR}-docker/bin/pip install --upgrade pip \
+					&& ${VENV_DEV_DIR}-docker/bin/pip install -r requirements-dev.txt \
+					&& PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}-docker/bin/python -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' \
+				|| touch lint.err
 	[ ! -f lint.err ]
 
 beautify:
@@ -63,12 +68,21 @@ beautify:
 
 test:
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}/bin/python -m app_tests'
+			-c 'python3.9 -m venv ${VENV_DEV_DIR}-docker \
+					&& ${VENV_DEV_DIR}-docker/bin/pip install --upgrade pip \
+					&& ${VENV_DEV_DIR}-docker/bin/pip install -r requirements-dev.txt \
+					&& PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}-docker/bin/python -m app_tests'
 
 help:
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DIR}/bin/python -m app --help'
+			-c 'python3.9 -m venv ${VENV_DIR}-docker \
+					&& ${VENV_DIR}-docker/bin/pip install --upgrade pip \
+					&& ${VENV_DIR}-docker/bin/pip install -r requirements.txt \
+					&& PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DIR}-docker/bin/python -m app --help'
 
 run:
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} GRPC_VERBOSITY=debug ${VENV_DIR}/bin/python -m app --enable_reflection'
+			-c 'python3.9 -m venv ${VENV_DIR}-docker \
+					&& ${VENV_DIR}-docker/bin/pip install --upgrade pip \
+					&& ${VENV_DIR}-docker/bin/pip install -r requirements.txt \
+					&& PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} GRPC_VERBOSITY=debug ${VENV_DIR}-docker/bin/python -m app --enable_reflection'
