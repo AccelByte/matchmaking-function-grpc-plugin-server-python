@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM rvolosatovs/protoc:4.0.0 as proto
+FROM rvolosatovs/protoc:4.0.0 as proto
 WORKDIR /build
 COPY src/app/proto src/app/proto
 RUN protoc --proto_path=app/proto=src/app/proto \
@@ -6,7 +6,7 @@ RUN protoc --proto_path=app/proto=src/app/proto \
         --grpc-python_out=src \
         src/app/proto/*.proto
 
-FROM python:3.9-slim
+FROM --platform=$BUILDPLATFORM python:3.9-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
@@ -14,7 +14,8 @@ COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
 COPY . ./
 COPY --from=proto /build/src/app/proto src/app/proto
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+RUN adduser -u 5678 --disabled-password --gecos "" appuser \
+                && chown -R appuser /app
 USER appuser
 # Plugin arch gRPC server port
 EXPOSE 6565
