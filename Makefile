@@ -83,3 +83,26 @@ help: setup_docker proto
 run: setup_docker proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
 			-c 'PYTHONPATH=${SOURCE_DIR}:${SOURCE_DIR}/${TESTS_DIR} GRPC_VERBOSITY=debug ${VENV_DOCKER_DIR}/bin/python -m app --enable_reflection'
+
+test_functional_local_hosted: proto
+	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
+	docker build --tag matchmaking-test-functional -f test/functional/Dockerfile test/functional && \
+	docker run --rm -t \
+		--env-file $(ENV_PATH) \
+		-e PIP_CACHE_DIR=/data/.cache/pip \
+		-u $$(id -u):$$(id -g) \
+		-v $$(pwd):/data \
+		-w /data matchmaking-test-functional bash ./test/functional/test-local-hosted.sh
+
+test_functional_accelbyte_hosted: proto
+	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
+	docker build --tag matchmaking-test-functional -f test/functional/Dockerfile test/functional && \
+	docker run --rm -t \
+		--env-file $(ENV_PATH) \
+		-e PIP_CACHE_DIR=/data/.cache/pip \
+		-e DOCKER_CONFIG=/tmp/.docker \
+		-u $$(id -u):$$(id -g) \
+		--group-add $$(getent group docker | cut -d ':' -f 3) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v $$(pwd):/data \
+		-w /data matchmaking-test-functional bash ./test/functional/test-accelbyte-hosted.sh
