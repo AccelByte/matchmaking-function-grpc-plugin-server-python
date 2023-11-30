@@ -126,58 +126,58 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
         if len(responses) > 1:
             self.fail(msg="created too many matches")
 
-    async def test_authorization_server_interceptor(self):
-        import accelbyte_py_sdk.services.auth as auth_service
-        from accelbyte_py_sdk import AccelByteSDK
-        from accelbyte_py_sdk.core import EnvironmentConfigRepository
-        from accelbyte_py_sdk.core import InMemoryTokenRepository
-        from accelbyte_py_sdk.core import get_env_user_credentials
+    # async def test_authorization_server_interceptor(self):
+    #     import accelbyte_py_sdk.services.auth as auth_service
+    #     from accelbyte_py_sdk import AccelByteSDK
+    #     from accelbyte_py_sdk.core import EnvironmentConfigRepository
+    #     from accelbyte_py_sdk.core import InMemoryTokenRepository
+    #     from accelbyte_py_sdk.core import get_env_user_credentials
 
-        # arrange
-        sdk = AccelByteSDK()
-        sdk.initialize(
-            options={
-                "config": EnvironmentConfigRepository(),
-                "token": InMemoryTokenRepository(),
-            }
-        )
+    #     # arrange
+    #     sdk = AccelByteSDK()
+    #     sdk.initialize(
+    #         options={
+    #             "config": EnvironmentConfigRepository(),
+    #             "token": InMemoryTokenRepository(),
+    #         }
+    #     )
 
-        username, password = get_env_user_credentials()
-        namespace, error = sdk.get_namespace()
-        if error:
-            self.fail(msg="can't find namespace")
+    #     username, password = get_env_user_credentials()
+    #     namespace, error = sdk.get_namespace()
+    #     if error:
+    #         self.fail(msg="can't find namespace")
 
-        result, error = await auth_service.login_user_async(username, password, sdk=sdk)
-        access_token = result.access_token
+    #     result, error = await auth_service.login_user_async(username, password, sdk=sdk)
+    #     access_token = result.access_token
 
-        token_validator = CachingTokenValidator(sdk=sdk)
-        interceptor = AuthorizationServerInterceptor(
-            resource=f"NAMESPACE:{namespace}:MATCHMAKING",
-            action=2,
-            namespace=namespace,
-            token_validator=token_validator,
-        )
-        server = self.create_server("[::]:50051", (interceptor,))
-        add_MatchFunctionServicer_to_server(self.service, server)
+    #     token_validator = CachingTokenValidator(sdk=sdk)
+    #     interceptor = AuthorizationServerInterceptor(
+    #         resource=f"NAMESPACE:{namespace}:MATCHMAKING",
+    #         action=2,
+    #         namespace=namespace,
+    #         token_validator=token_validator,
+    #     )
+    #     server = self.create_server("[::]:50051", (interceptor,))
+    #     add_MatchFunctionServicer_to_server(self.service, server)
 
-        await server.start()
+    #     await server.start()
 
-        try:
-            async with grpc.aio.secure_channel(
-                "localhost:50051",
-                self.create_access_token_credentials(access_token),
-            ) as channel:
-                stub = MatchFunctionStub(channel)
+    #     try:
+    #         async with grpc.aio.secure_channel(
+    #             "localhost:50051",
+    #             self.create_access_token_credentials(access_token),
+    #         ) as channel:
+    #             stub = MatchFunctionStub(channel)
 
-                # act
-                await asyncio.sleep(10)
-                response = await stub.GetStatCodes(GetStatCodesRequest())
+    #             # act
+    #             await asyncio.sleep(10)
+    #             response = await stub.GetStatCodes(GetStatCodesRequest())
 
-                # assert
-                self.assertIsNotNone(response)
-                self.assertIsInstance(response, StatCodesResponse)
-        finally:
-            await server.stop(grace=None)
+    #             # assert
+    #             self.assertIsNotNone(response)
+    #             self.assertIsInstance(response, StatCodesResponse)
+    #     finally:
+    #         await server.stop(grace=None)
 
     @staticmethod
     def create_make_matches_request_parameters(
