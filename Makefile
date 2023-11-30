@@ -3,62 +3,68 @@ SOURCE_DIR = src
 TESTS_DIR = tests
 VENV_DIR = venv
 VENV_DEV_DIR = venv-dev
+VENV_DOCKER_DIR = venv-docker
+VENV_DEV_DOCKER_DIR = venv-dev-docker
 
+BUILDER := grpc-plugin-server-builder
 IMAGE_NAME := $(shell basename "$$(pwd)")-app
 
 .PHONY: test
 
+clean:
+	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_grpc.py \
+			${SOURCE_DIR}/${PROTO_DIR}/*_pb2.py \
+			${SOURCE_DIR}/${PROTO_DIR}/*_pb2.pyi \
+			${SOURCE_DIR}/${PROTO_DIR}/*_pb2_grpc.py
+
+proto: clean
+	docker run -t --rm -u $$(id -u):$$(id -g) -v $$(pwd):/data/ -w /data/ rvolosatovs/protoc:4.0.0 \
+			--proto_path=${PROTO_DIR}=${SOURCE_DIR}/${PROTO_DIR} \
+			--python_out=${SOURCE_DIR} \
+			--grpc-python_out=${SOURCE_DIR} \
+			${SOURCE_DIR}/${PROTO_DIR}/*.proto
+
 setup:
-	rm -rf ${VENV_DEV_DIR} 
+	python3.9 -m venv ${VENV_DIR} \
+			&& ${VENV_DIR}/bin/pip install --upgrade pip \
+			&& ${VENV_DIR}/bin/pip install -r requirements.txt
 	python3.9 -m venv ${VENV_DEV_DIR} \
 			&& ${VENV_DEV_DIR}/bin/pip install --upgrade pip \
 			&& ${VENV_DEV_DIR}/bin/pip install -r requirements-dev.txt
 
-	rm -rf ${VENV_DIR}
-	python3.9 -m venv ${VENV_DIR} \
-			&& ${VENV_DIR}/bin/pip install --upgrade pip \
-			&& ${VENV_DIR}/bin/pip install -r requirements.txt
-
-clean:
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_grpc.py
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2.py
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2.pyi
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2_grpc.py
-
-proto: clean
-	docker run -t --rm -u $$(id -u):$$(id -g) -v $$(pwd):/data/ -w /data/ rvolosatovs/protoc:4.0.0 \
-		--proto_path=${PROTO_DIR}=${SOURCE_DIR}/${PROTO_DIR} \
-		--python_out=${SOURCE_DIR} \
-		--grpc-python_out=${SOURCE_DIR} \
-		${SOURCE_DIR}/${PROTO_DIR}/*.proto
+setup_docker:
+	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
+			-c 'python3.9 -m venv ${VENV_DOCKER_DIR} \
+					&& ${VENV_DOCKER_DIR}/bin/pip install --upgrade pip \
+					&& ${VENV_DOCKER_DIR}/bin/pip install -r requirements.txt'
+	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
+			-c 'python3.9 -m venv ${VENV_DEV_DOCKER_DIR} \
+					&& ${VENV_DEV_DOCKER_DIR}/bin/pip install --upgrade pip \
+					&& ${VENV_DEV_DOCKER_DIR}/bin/pip install -r requirements-dev.txt'
 
 build: proto
 
-image:
+image: proto
 	docker buildx build -t ${IMAGE_NAME} --load .
 
-imagex:
-	docker buildx inspect ${IMAGE_NAME}-builder \
-			|| docker buildx create --name ${IMAGE_NAME}-builder --use 
+imagex: proto
+	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use 
 	docker buildx build -t ${IMAGE_NAME} --platform linux/arm64/v8,linux/amd64 .
 	docker buildx build -t ${IMAGE_NAME} --load .
-	#docker buildx rm ${IMAGE_NAME}-builder
+	docker buildx rm --keep-state $(BUILDER)
 
-imagex_push:
+imagex_push: proto
 	@test -n "$(IMAGE_TAG)" || (echo "IMAGE_TAG is not set (e.g. 'v0.1.0', 'latest')"; exit 1)
 	@test -n "$(REPO_URL)" || (echo "REPO_URL is not set"; exit 1)
 	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use
 	docker buildx build -t ${REPO_URL}:${IMAGE_TAG} --platform linux/arm64/v8,linux/amd64 --push .
 	docker buildx rm --keep-state $(BUILDER)
 
-lint:
+lint: setup_docker proto
 	rm -f lint.err
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip -e PYLINTHOME=/data/.cache/pylint  --entrypoint /bin/sh python:3.9-slim \
-			-c 'python3.9 -m venv ${VENV_DEV_DIR}-docker \
-					&& ${VENV_DEV_DIR}-docker/bin/pip install --upgrade pip \
-					&& ${VENV_DEV_DIR}-docker/bin/pip install -r requirements-dev.txt \
-					&& PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}-docker/bin/python -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' \
-				|| touch lint.err
+	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip -e PYLINTHOME=/data/.cache/pylint --entrypoint /bin/sh python:3.9-slim \
+			-c 'setup_dockerPYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DOCKER_DIR}/bin/python -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' \
+		|| touch lint.err
 	[ ! -f lint.err ]
 
 beautify:
@@ -66,23 +72,14 @@ beautify:
 		${SOURCE_DIR} \
 		${TESTS_DIR}
 
-test:
+test: setup_docker proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'python3.9 -m venv ${VENV_DEV_DIR}-docker \
-					&& ${VENV_DEV_DIR}-docker/bin/pip install --upgrade pip \
-					&& ${VENV_DEV_DIR}-docker/bin/pip install -r requirements-dev.txt \
-					&& PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}-docker/bin/python -m app_tests'
+			-c 'PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DOCKER_DIR}/bin/python -m app_tests'
 
-help:
+help: setup_docker proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'python3.9 -m venv ${VENV_DIR}-docker \
-					&& ${VENV_DIR}-docker/bin/pip install --upgrade pip \
-					&& ${VENV_DIR}-docker/bin/pip install -r requirements.txt \
-					&& PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DIR}-docker/bin/python -m app --help'
+			-c 'PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DOCKER_DIR}r/bin/python -m app --help'
 
-run:
+run: setup_docker proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'python3.9 -m venv ${VENV_DIR}-docker \
-					&& ${VENV_DIR}-docker/bin/pip install --upgrade pip \
-					&& ${VENV_DIR}-docker/bin/pip install -r requirements.txt \
-					&& PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} GRPC_VERBOSITY=debug ${VENV_DIR}-docker/bin/python -m app --enable_reflection'
+			-c 'PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} GRPC_VERBOSITY=debug ${VENV_DOCKER_DIR}/bin/python -m app --enable_reflection'
