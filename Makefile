@@ -63,7 +63,7 @@ imagex_push: proto
 lint: setup_docker proto
 	rm -f lint.err
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip -e PYLINTHOME=/data/.cache/pylint --entrypoint /bin/sh python:3.9-slim \
-			-c 'setup_dockerPYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DOCKER_DIR}/bin/python -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' \
+			-c 'PYTHONPATH=${SOURCE_DIR}:${SOURCE_DIR}/${TESTS_DIR} ${VENV_DEV_DOCKER_DIR}/bin/python -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' \
 		|| touch lint.err
 	[ ! -f lint.err ]
 
@@ -74,12 +74,12 @@ beautify:
 
 test: setup_docker proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DOCKER_DIR}/bin/python -m app_tests'
+			-c 'PYTHONPATH=${SOURCE_DIR}:${SOURCE_DIR}/${TESTS_DIR} ${VENV_DEV_DOCKER_DIR}/bin/python -m app_tests'
 
 help: setup_docker proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DOCKER_DIR}r/bin/python -m app --help'
+			-c 'PYTHONPATH=${SOURCE_DIR}:${SOURCE_DIR}/${TESTS_DIR} ${VENV_DOCKER_DIR}r/bin/python -m app --help'
 
 run: setup_docker proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} GRPC_VERBOSITY=debug ${VENV_DOCKER_DIR}/bin/python -m app --enable_reflection'
+			-c 'PYTHONPATH=${SOURCE_DIR}:${SOURCE_DIR}/${TESTS_DIR} GRPC_VERBOSITY=debug ${VENV_DOCKER_DIR}/bin/python -m app --enable_reflection'
