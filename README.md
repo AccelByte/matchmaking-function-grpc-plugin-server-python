@@ -257,7 +257,7 @@ Please refer to [getting started docs](https://docs-preview.accelbyte.io/gaming-
 Helper commands to make development easier.
 
 ```
-make setup      # Setting up virtual environment
+make venv       # Setting up virtual environment
 make build      # Generating code from proto files
 make test       # Running tests
 make run        # Running the server (without container)

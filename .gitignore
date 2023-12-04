@@ -20,7 +20,7 @@ Thumbs.db
 .cache/
 
 # Virtual Environments
-venv*/
+venv/
 
 # Generated Proto files
 *_grpc.py
@@ -30,3 +30,6 @@ venv*/
 
 # Docker Compose .env file
 .env
+
+.docker/
+.local/

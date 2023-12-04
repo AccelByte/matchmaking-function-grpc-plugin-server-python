@@ -19,3 +19,7 @@ pyjwt[crypto]
 pyyaml
 requests
 websockets
+
+grpcio-testing==1.48.1
+grpcio-tools==1.48.1
+tap.py

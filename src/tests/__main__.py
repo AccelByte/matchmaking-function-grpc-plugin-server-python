@@ -5,13 +5,13 @@ import unittest
 from argparse import ArgumentParser
 from pathlib import Path
 
-import app_tests.services
-import app_tests.logger
+import tests.services
+import tests.logger
 
 
 def main(**kwargs):
     log_level = max(1, min(kwargs.get("log_level"), 50))
-    logger = app_tests.logger.LOGGER
+    logger = tests.logger.LOGGER
     logger.setLevel(log_level)
     if 0 < log_level <= logging.INFO:
         logger.addHandler(logging.StreamHandler())
@@ -50,7 +50,7 @@ def main(**kwargs):
 
     suite = unittest.TestSuite(
         [
-            loader.loadTestsFromModule(app_tests.services),
+            loader.loadTestsFromModule(tests.services),
         ]
     )
     result = runner.run(suite)
