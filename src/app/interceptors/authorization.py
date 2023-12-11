@@ -3,6 +3,7 @@ from typing import Awaitable, Callable, List
 from grpc import HandlerCallDetails, RpcMethodHandler, StatusCode
 from grpc.aio import AioRpcError, Metadata, ServerInterceptor
 
+from accelbyte_py_sdk.services.auth import parse_access_token
 from accelbyte_py_sdk.token_validation import TokenValidatorProtocol
 
 
@@ -30,16 +31,20 @@ class AuthorizationServerInterceptor(ServerInterceptor):
         continuation: Callable[[HandlerCallDetails], Awaitable[RpcMethodHandler]],
         handler_call_details: HandlerCallDetails,
     ) -> RpcMethodHandler:
-        if (
-            authorization := next(
-                (
-                    metadata.value
-                    for metadata in handler_call_details.invocation_metadata
-                    if metadata.key == "authorization"
-                ),
-                None,
-            )
-        ) and authorization is None:
+        method = getattr(handler_call_details, "method", "")
+        if method in self.whitelisted_methods:
+            return await continuation(handler_call_details)
+
+        authorization = next(
+            (
+                metadata.value
+                for metadata in handler_call_details.invocation_metadata
+                if metadata.key == "authorization"
+            ),
+            None,
+        )
+
+        if authorization is None:
             raise self.create_aio_rpc_error(error="no authorization token found")
 
         if not authorization.startswith("Bearer "):
@@ -55,6 +60,17 @@ class AuthorizationServerInterceptor(ServerInterceptor):
             )
             if error is not None:
                 raise error
+            claims, error = parse_access_token(token)
+            if error is not None:
+                raise error
+            if extend_namespace := claims.get("extend_namespace", None):
+                if extend_namespace != self.namespace:
+                    raise self.create_aio_rpc_error(
+                        error=f"'{extend_namespace}' does not match '{self.namespace}'",
+                        code=StatusCode.PERMISSION_DENIED,
+                    )
+        except AioRpcError as rpc_error:
+            raise rpc_error
         except Exception as e:
             raise self.create_aio_rpc_error(
                 error=str(e), code=StatusCode.INTERNAL
