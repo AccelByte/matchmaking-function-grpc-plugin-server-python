@@ -147,6 +147,7 @@ async def main(
         from accelbyte_py_sdk import AccelByteSDK
         from accelbyte_py_sdk.core import MyConfigRepository, InMemoryTokenRepository
         from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
+        from accelbyte_py_sdk.services.auth import login_client
         from app.interceptors.authorization import AuthorizationServerInterceptor
 
         ab_base_url = os.environ.get("AB_BASE_URL", DEFAULT_AB_BASE_URL)
@@ -171,6 +172,9 @@ async def main(
         logger.info(
             f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace} resource_name: {ab_resource_name})"
         )
+        result, error = login_client(sdk=accelbyte_sdk)
+        if error:
+            raise Exception(str(error))
 
         token_validator_fetch_interval = arg2number(
             os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600
