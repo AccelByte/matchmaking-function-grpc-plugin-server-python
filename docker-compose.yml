@@ -2,19 +2,18 @@ version: '3.5'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    build: .
     ports:
       - "6565:6565"
       - "8080:8080"
     environment:
+      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://host.docker.internal:9411/api/v2/spans
       - AB_CLIENT_ID
       - AB_CLIENT_SECRET
       - AB_NAMESPACE
       - PLUGIN_GRPC_SERVER_AUTH_ENABLED
-      - LOKI_URL=http://host.docker.internal:3100/loki/api/v1/push
-      - OTEL_EXPORTER_ZIPKIN_ENDPOINT=http://host.docker.internal:9411/api/v2/spans
+    extra_hosts:
+      - host.docker.internal:host-gateway
     logging:
       driver: loki
       options:
@@ -22,5 +21,3 @@ services:
         mode: non-blocking
         max-buffer-size: 4m
         loki-retries: "3"
-    extra_hosts:
-      - host.docker.internal:host-gateway
