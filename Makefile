@@ -25,12 +25,12 @@ venv:
 
 build: proto
 
-run: proto
+run: venv proto
 	docker run --rm -it -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.9-slim \
 			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
 					&& PYTHONPATH=${SOURCE_DIR} GRPC_VERBOSITY=debug ${VENV_DIR}/bin/python-docker -m app --enable_reflection'
 
-help: proto
+help: venv proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.9-slim \
 			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
 					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m app --help'
@@ -51,7 +51,7 @@ imagex_push: proto
 	docker buildx build -t ${REPO_URL}:${IMAGE_TAG} --platform linux/arm64/v8,linux/amd64 --push .
 	docker buildx rm --keep-state $(BUILDER)
 
-test: proto
+test: venv proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.9-slim \
 			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
 					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m tests'
