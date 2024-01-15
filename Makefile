@@ -21,7 +21,7 @@ proto: clean
 
 venv:
 	python3.9 -m venv ${VENV_DIR} \
-			&& ${VENV_DIR}/bin/pip install -r requirements.txt
+			&& ${VENV_DIR}/bin/pip install -r requirements-dev.txt
 
 build: proto
 

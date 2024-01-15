@@ -1,0 +1,5 @@
+-r requirements.txt
+
+grpcio-testing==1.48.1
+grpcio-tools==1.48.1
+tap.py
