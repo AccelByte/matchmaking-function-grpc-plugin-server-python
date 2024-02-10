@@ -28,7 +28,7 @@ DEFAULT_APP_NAME: str = "app-server"
 DEFAULT_APP_HOSTNAME: str = "localhost"
 DEFAULT_APP_PORT: int = 6565
 
-DEFAULT_AB_BASE_URL: str = "https://demo.accelbyte.io"
+DEFAULT_AB_BASE_URL: str = "https://test.accelbyte.io"
 DEFAULT_AB_NAMESPACE: str = "accelbyte"
 DEFAULT_AB_RESOURCE_NAME: str = "MMV2GRPCSERVICE"
 
