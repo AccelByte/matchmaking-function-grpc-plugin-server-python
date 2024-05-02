@@ -6,7 +6,7 @@ RUN protoc --proto_path=app/proto=src/app/proto \
         --grpc-python_out=src \
         src/app/proto/*.proto
 
-FROM --platform=$BUILDPLATFORM python:3.9-slim
+FROM --platform=$BUILDPLATFORM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
