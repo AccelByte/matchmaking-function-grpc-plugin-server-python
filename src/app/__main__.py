@@ -30,7 +30,6 @@ DEFAULT_APP_PORT: int = 6565
 
 DEFAULT_AB_BASE_URL: str = "https://test.accelbyte.io"
 DEFAULT_AB_NAMESPACE: str = "accelbyte"
-DEFAULT_AB_RESOURCE_NAME: str = "MMV2GRPCSERVICE"
 
 DEFAULT_PROMETHEUS_ADDR: str = "0.0.0.0"
 DEFAULT_PROMETHEUS_PORT: int = 8080
@@ -52,7 +51,7 @@ async def main(
     enable_zipkin = arg2bool(os.environ.get("ENABLE_ZIPKIN"), default=True)
 
     enable_interceptor_auth = arg2bool(
-        os.environ.get("ENABLE_INTERCEPTOR_AUTH"), default=True
+        os.environ.get("PLUGIN_GRPC_SERVER_AUTH_ENABLED"), default=True
     )
     enable_interceptor_logging = arg2bool(
         os.environ.get("ENABLE_INTERCEPTOR_LOGGING"), default=False
@@ -143,7 +142,7 @@ async def main(
 
     if enable_interceptor_auth:
         # authorization server interceptor
-        #   uses `AB_BASE_URL`, `AB_CLIENT_SECRET`, `AB_CLIENT_SECRET`, `AB_NAMESPACE`, `AB_RESOURCE_NAME`, `TOKEN_VALIDATOR_FETCH_INTERVAL`
+        #   uses `AB_BASE_URL`, `AB_CLIENT_SECRET`, `AB_CLIENT_SECRET`, `AB_NAMESPACE`, `TOKEN_VALIDATOR_FETCH_INTERVAL`
         from accelbyte_py_sdk import AccelByteSDK
         from accelbyte_py_sdk.core import MyConfigRepository, InMemoryTokenRepository
         from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
@@ -153,10 +152,8 @@ async def main(
         ab_base_url = os.environ.get("AB_BASE_URL", DEFAULT_AB_BASE_URL)
         ab_client_id = os.environ.get("AB_CLIENT_ID", None)
         ab_client_secret = os.environ.get("AB_CLIENT_SECRET", None)
-        ab_namespace = get_env_var(
-            key=["AB_NAMESPACE", "NAMESPACE"], default="accelbyte"
-        )
-        ab_resource_name = os.environ.get("AB_RESOURCE_NAME", DEFAULT_AB_RESOURCE_NAME)
+        ab_namespace = os.environ.get("AB_NAMESPACE", DEFAULT_AB_NAMESPACE)
+
         accelbyte_sdk = AccelByteSDK()
         accelbyte_sdk.initialize(
             options={
@@ -170,7 +167,7 @@ async def main(
             }
         )
         logger.info(
-            f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace} resource_name: {ab_resource_name})"
+            f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace})"
         )
         result, error = login_client(sdk=accelbyte_sdk)
         if error:
@@ -186,13 +183,12 @@ async def main(
         )
         logger.info("token validator initialized")
 
-        if os.environ.get("PLUGIN_GRPC_SERVER_AUTH_ENABLED") == "true":
-            interceptors.append(
-                AuthorizationServerInterceptor(
-                    namespace=ab_namespace,
-                    token_validator=token_validator,
-                )
+        interceptors.append(
+            AuthorizationServerInterceptor(
+                namespace=ab_namespace,
+                token_validator=token_validator,
             )
+        )
 
     if enable_interceptor_metrics:
         import platform
@@ -285,17 +281,7 @@ def arg2number(arg: Any, default: float = 0) -> float:
         return len(arg)
     else:
         raise NotImplementedError()
-
-
-def get_env_var(key: Union[str, List[str]], default: Optional[str] = None) -> str:
-    if isinstance(key, str):
-        return os.environ.get(key, default=default)
-    elif isinstance(key, list):
-        for k in key:
-            v = os.environ.get(k, None)
-            if v is not None and v != "" and not v.isspace():
-                return v
-        return default
+    
 
 
 def to_camelcase(s: str) -> str:
