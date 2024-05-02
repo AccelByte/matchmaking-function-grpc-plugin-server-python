@@ -1,10 +1,16 @@
-BUILDER := grpc-plugin-server-builder
+# Copyright (c) 2022 AccelByte Inc. All Rights Reserved.
+# This is licensed software from AccelByte Inc, for limitations
+# and restrictions contact your company contract manager.
+
+SHELL := /bin/bash
+
 IMAGE_NAME := $(shell basename "$$(pwd)")-app
+BUILDER := extend-builder
 
 SOURCE_DIR := src
 VENV_DIR := venv
 
-PROJECT_DIR ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+TEST_SAMPLE_CONTAINER_NAME := sample-override-test
 
 .PHONY: venv test
 
@@ -13,7 +19,7 @@ clean:
 		&& rm -fv *_grpc.py *_pb2.py *_pb2.pyi *_pb2_grpc.py
 
 proto: clean
-	docker run -t --rm -u $$(id -u):$$(id -g) -v $(PROJECT_DIR):/data/ -w /data rvolosatovs/protoc:4.0.0 \
+	docker run -t --rm -u $$(id -u):$$(id -g) -v $$(pwd):/data/ -w /data rvolosatovs/protoc:4.0.0 \
 			--proto_path=app/proto=${SOURCE_DIR}/app/proto \
 			--python_out=${SOURCE_DIR} \
 			--grpc-python_out=${SOURCE_DIR} \
@@ -56,32 +62,43 @@ test: venv proto
 			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
 					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m tests'
 
-test_functional_local_hosted: proto
-	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
-	docker build --tag matchmaking-test-functional -f test/functional/Dockerfile test/functional
-	docker run --rm -t \
-		--env-file $(ENV_PATH) \
-		-e HOME=/data \
-		-u $$(id -u):$$(id -g) \
-		-v $$(pwd):/data \
-		-w /data matchmaking-test-functional bash ./test/functional/test-local-hosted.sh
-
-test_functional_accelbyte_hosted: proto
-	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
-ifeq ($(shell uname), Linux)
-	$(eval DARGS := -u $$(shell id -u):$$(shell id -g) --group-add $$(shell getent group docker | cut -d ':' -f 3))
-endif
-	docker build --tag matchmaking-test-functional -f test/functional/Dockerfile test/functional
-	docker run --rm -t \
-		--env-file $(ENV_PATH) \
-		-e HOME=/data \
-		-e PROJECT_DIR=$(PROJECT_DIR) \
-		$(DARGS) \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v $$(pwd):/data \
-		-w /data matchmaking-test-functional bash ./test/functional/test-accelbyte-hosted.sh
-
 ngrok:
 	@test -n "$(NGROK_AUTHTOKEN)" || (echo "NGROK_AUTHTOKEN is not set" ; exit 1)
 	docker run --rm -it --net=host -e NGROK_AUTHTOKEN=$(NGROK_AUTHTOKEN) ngrok/ngrok:3-alpine \
 			tcp 6565	# gRPC server port
+
+test_sample_local_hosted:
+	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
+	docker build \
+			--tag $(TEST_SAMPLE_CONTAINER_NAME) \
+			-f test/sample/Dockerfile \
+			test/sample
+	docker run --rm -t \
+			-u $$(id -u):$$(id -g) \
+			-e HOME=/data \
+			--env-file $(ENV_PATH) \
+			-v $$(pwd):/data \
+			-w /data \
+			--name $(TEST_SAMPLE_CONTAINER_NAME) \
+			$(TEST_SAMPLE_CONTAINER_NAME) \
+			bash ./test/sample/test-local-hosted.sh
+
+test_sample_accelbyte_hosted:
+	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
+ifeq ($(shell uname), Linux)
+	$(eval DARGS := -u $$(shell id -u) --group-add $$(shell getent group docker | cut -d ':' -f 3))
+endif
+	docker build \
+			--tag $(TEST_SAMPLE_CONTAINER_NAME) \
+			-f test/sample/Dockerfile \
+			test/sample
+	docker run --rm -t \
+			-e HOME=/data \
+			--env-file $(ENV_PATH) \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			-v $$(pwd):/data \
+			-w /data \
+			--name $(TEST_SAMPLE_CONTAINER_NAME) \
+			$(DARGS) \
+			$(TEST_SAMPLE_CONTAINER_NAME) \
+			bash ./test/sample/test-accelbyte-hosted.sh
