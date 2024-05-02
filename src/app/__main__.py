@@ -189,8 +189,6 @@ async def main(
         if os.environ.get("PLUGIN_GRPC_SERVER_AUTH_ENABLED") == "true":
             interceptors.append(
                 AuthorizationServerInterceptor(
-                    resource=f"NAMESPACE:{ab_namespace}:{ab_resource_name}",
-                    action=2,
                     namespace=ab_namespace,
                     token_validator=token_validator,
                 )

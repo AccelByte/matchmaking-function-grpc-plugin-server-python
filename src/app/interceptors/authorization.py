@@ -16,13 +16,9 @@ class AuthorizationServerInterceptor(ServerInterceptor):
 
     def __init__(
         self,
-        resource: str,
-        action: int,
         namespace: str,
         token_validator: TokenValidatorProtocol,
     ):
-        self.resource = resource
-        self.action = action
         self.namespace = namespace
         self.token_validator = token_validator
 
@@ -53,10 +49,7 @@ class AuthorizationServerInterceptor(ServerInterceptor):
         try:
             token = authorization.removeprefix("Bearer ")
             error = self.token_validator.validate_token(
-                token=token,
-                resource=self.resource,
-                action=self.action,
-                namespace=self.namespace,
+                token=token
             )
             if error is not None:
                 raise error
