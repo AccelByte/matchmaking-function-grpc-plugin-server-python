@@ -49,7 +49,8 @@ class AuthorizationServerInterceptor(ServerInterceptor):
         try:
             token = authorization.removeprefix("Bearer ")
             error = self.token_validator.validate_token(
-                token=token
+                token=token,
+                namespace=self.namespace
             )
             if error is not None:
                 raise error
