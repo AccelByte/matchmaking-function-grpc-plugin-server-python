@@ -1,4 +1,4 @@
-FROM rvolosatovs/protoc:4.0.0 as proto
+FROM rvolosatovs/protoc:4.0.0 AS proto
 WORKDIR /build
 COPY src/app/proto src/app/proto
 RUN protoc --proto_path=app/proto=src/app/proto \
