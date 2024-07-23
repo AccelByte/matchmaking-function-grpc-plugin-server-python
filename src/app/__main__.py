@@ -4,7 +4,7 @@ import os
 
 from argparse import ArgumentParser
 from logging import Logger
-from typing import Any, List, Optional, Union
+from typing import Any, Optional
 
 import grpc.aio
 
@@ -146,7 +146,7 @@ async def main(
         from accelbyte_py_sdk import AccelByteSDK
         from accelbyte_py_sdk.core import MyConfigRepository, InMemoryTokenRepository
         from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
-        from accelbyte_py_sdk.services.auth import login_client
+        from accelbyte_py_sdk.services.auth import login_client, LoginClientTimer
         from app.interceptors.authorization import AuthorizationServerInterceptor
 
         ab_base_url = os.environ.get("AB_BASE_URL", DEFAULT_AB_BASE_URL)
@@ -154,30 +154,24 @@ async def main(
         ab_client_secret = os.environ.get("AB_CLIENT_SECRET", None)
         ab_namespace = os.environ.get("AB_NAMESPACE", DEFAULT_AB_NAMESPACE)
 
-        accelbyte_sdk = AccelByteSDK()
-        accelbyte_sdk.initialize(
-            options={
-                "config": MyConfigRepository(
-                    base_url=ab_base_url,
-                    client_id=ab_client_id,
-                    client_secret=ab_client_secret,
-                    namespace=ab_namespace,
-                ),
-                "token": InMemoryTokenRepository(),
-            }
-        )
+        config = MyConfigRepository(ab_base_url, ab_client_id, ab_client_secret, ab_namespace)
+        token = InMemoryTokenRepository()
+        sdk = AccelByteSDK()
+        sdk.initialize(options={"config": config, "token": token})
         logger.info(
             f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace})"
         )
-        result, error = login_client(sdk=accelbyte_sdk)
+        result, error = login_client(sdk=sdk)
         if error:
             raise Exception(str(error))
+
+        sdk.timer = LoginClientTimer(2880, repeats=-1, autostart=True, sdk=sdk)
 
         token_validator_fetch_interval = arg2number(
             os.environ.get("TOKEN_VALIDATOR_FETCH_INTERVAL"), default=3600
         )
         token_validator = CachingTokenValidator(
-            sdk=accelbyte_sdk,
+            sdk=sdk,
             token_refresh_interval=token_validator_fetch_interval,
             revocation_list_refresh_interval=token_validator_fetch_interval,
         )
