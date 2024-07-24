@@ -179,8 +179,8 @@ async def main(
 
         interceptors.append(
             AuthorizationServerInterceptor(
-                namespace=ab_namespace,
                 token_validator=token_validator,
+                namespace=ab_namespace,
             )
         )
 
