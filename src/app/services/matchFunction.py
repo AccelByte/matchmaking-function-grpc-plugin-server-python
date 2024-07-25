@@ -92,7 +92,11 @@ class AsyncMatchFunctionService(MatchFunctionServicer):
                         response.match.tickets.append(unmatched_ticket)
                     unmatched_tickets.clear()
                     response.match.teams.add().user_ids.extend(player_ids)
-                    response.match.region_preferences.append("any")
+
+                    # RegionPreference value is just an example. The value(s) should be from the best region on the matchmaker.Ticket.Latencies
+                    response.match.region_preferences.append("us-east-2")
+                    response.match.region_preferences.append("us-west-2")
+                    
                     self.logger.info("Match made and sent to client!")
                     self.log_payload(f'{self.MakeMatches.__name__} response: %s', response)
                     yield response
