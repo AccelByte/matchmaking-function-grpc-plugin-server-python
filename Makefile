@@ -7,12 +7,14 @@ SHELL := /bin/bash
 IMAGE_NAME := $(shell basename "$$(pwd)")-app
 BUILDER := extend-builder
 
+PYTHON_VERSION := 3.10
+
 SOURCE_DIR := src
-VENV_DIR := venv
+TEST_DIR := test
 
 TEST_SAMPLE_CONTAINER_NAME := sample-override-test
 
-.PHONY: venv test
+.PHONY: test
 
 clean:
 	cd ${SOURCE_DIR}/app/proto \
@@ -25,21 +27,29 @@ proto: clean
 			--grpc-python_out=${SOURCE_DIR} \
 			${SOURCE_DIR}/app/proto/*.proto
 
-venv:
-	python3.10 -m venv ${VENV_DIR} \
-			&& ${VENV_DIR}/bin/pip install -r requirements-dev.txt
-
 build: proto
 
 run:
-	docker run --rm -it -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.10-slim \
-			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
-					&& PYTHONPATH=${SOURCE_DIR} GRPC_VERBOSITY=debug ${VENV_DIR}/bin/python-docker -m app --enable_reflection'
+	docker run --rm -it -u $$(id -u):$$(id -g) \
+		-e HOME=/data \
+		--env-file .env \
+		-v $$(pwd):/data \
+		-w /data \
+		--entrypoint /bin/sh \
+		python:${PYTHON_VERSION}-slim \
+		-c 'python -m pip install -r requirements.txt \
+			&& PYTHONPATH=${SOURCE_DIR} GRPC_VERBOSITY=debug python -m app --enable_reflection'
 
 help:
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.10-slim \
-			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
-					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m app --help'
+	docker run --rm -it -u $$(id -u):$$(id -g) \
+		-e HOME=/data \
+		--env-file .env \
+		-v $$(pwd):/data \
+		-w /data \
+		--entrypoint /bin/sh \
+		python:${PYTHON_VERSION}-slim \
+		-c 'python -m pip install -r requirements.txt \
+			&& PYTHONPATH=${SOURCE_DIR} python -m app --help'
 
 image:
 	docker buildx build -t ${IMAGE_NAME} --load .
@@ -58,9 +68,14 @@ imagex_push:
 	docker buildx rm --keep-state $(BUILDER)
 
 test:
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.10-slim \
-			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
-					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m tests'
+	docker run --rm -u $$(id -u):$$(id -g) \
+		-e HOME=/data \
+		-v $$(pwd):/data \
+		-w /data \
+		--entrypoint /bin/sh \
+		python:${PYTHON_VERSION}-slim \
+		-c 'python -m pip install -r requirements.txt \
+			&& PYTHONPATH=${SOURCE_DIR}:${TEST_DIR} python -m app_tests'
 
 ngrok:
 	@which ngrok || (echo "ngrok is not installed" ; exit 1)

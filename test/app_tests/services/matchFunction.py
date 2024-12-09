@@ -19,7 +19,7 @@ from app.interceptors.authorization import AuthorizationServerInterceptor
 from app.services.matchFunction import AsyncMatchFunctionService
 from app.utils import aiterize
 
-import tests.logger
+from ..logger import LOGGER
 
 
 class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
@@ -40,7 +40,7 @@ class AsyncMatchFunctionServiceTestCase(unittest.IsolatedAsyncioTestCase):
         return server
 
     async def asyncSetUp(self) -> None:
-        self.service = AsyncMatchFunctionService(logger=tests.logger.LOGGER)
+        self.service = AsyncMatchFunctionService(logger=LOGGER)
 
     async def test_get_stat_codes_returns_stat_codes_response(self):
         # arrange
