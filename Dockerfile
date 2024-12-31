@@ -38,4 +38,4 @@ EXPOSE 6565
 # Prometheus /metrics web server port
 EXPOSE 8080
 
-ENTRYPOINT ["python", "-m", "app", "--enable_health_checking", "--enable_reflection"]
+ENTRYPOINT ["python", "-m", "app"]

@@ -2,9 +2,7 @@ import asyncio
 import logging
 import os
 
-from argparse import ArgumentParser
-from logging import Logger
-from typing import Any, Optional
+from typing import Any
 
 import grpc.aio
 
@@ -36,18 +34,14 @@ DEFAULT_PROMETHEUS_PORT: int = 8080
 DEFAULT_PROMETHEUS_ENDPOINT: str = "/metrics"
 
 
-async def main(
-    *,
-    port: int,
-    enable_health_checking: bool = False,
-    enable_reflection: bool = False,
-    logger: Optional[Logger] = None,
-    **kwargs,
-) -> None:
-    logger = logger if logger is not None else app.logger.DEFAULT_LOGGER
+async def main(**kwargs) -> None:
+    logger = app.logger.DEFAULT_LOGGER
 
+    port = int(arg2number(os.environ.get("PORT"), default=DEFAULT_APP_PORT))
+    enable_health_checking = arg2bool(os.environ.get("ENABLE_HEALTH_CHECKING"), default=True)
     enable_log2stderr = arg2bool(os.environ.get("ENABLE_LOG2STDERR"), default=False)
     enable_prometheus = arg2bool(os.environ.get("ENABLE_PROMETHEUS"), default=True)
+    enable_reflection = arg2bool(os.environ.get("ENABLE_REFLECTION"), default=True)
     enable_zipkin = arg2bool(os.environ.get("ENABLE_ZIPKIN"), default=True)
 
     enable_interceptor_auth = arg2bool(
@@ -277,52 +271,9 @@ def arg2number(arg: Any, default: float = 0) -> float:
         raise NotImplementedError()
     
 
-
 def to_camelcase(s: str) -> str:
     return s.replace(" ", "_").replace("-", "_").replace(".", "_").strip()
 
 
-def parse_args():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "-n",
-        "--host",
-        default=DEFAULT_APP_HOSTNAME,
-        type=str,
-        required=False,
-        help="Host[n]ame",
-    )
-
-    parser.add_argument(
-        "-p",
-        "--port",
-        default=DEFAULT_APP_PORT,
-        type=int,
-        required=False,
-        help="[P]ort",
-    )
-
-    parser.add_argument(
-        "-c",
-        "--enable_health_checking",
-        action="store_true",
-        required=False,
-        help="Enable Server Health [C]hecking",
-    )
-
-    parser.add_argument(
-        "-r",
-        "--enable_reflection",
-        action="store_true",
-        required=False,
-        help="Enable Server [R]eflection",
-    )
-
-    result = vars(parser.parse_args())
-
-    return result
-
-
 if __name__ == "__main__":
-    asyncio.run(main(**parse_args()))
+    asyncio.run(main())
