@@ -29,7 +29,7 @@ ENV PYTHONUNBUFFERED=1
 # Install pip requirements
 WORKDIR /app
 COPY requirements.txt requirements.txt
-RUN python -m pip install -r requirements.txt
+RUN python -m pip install --no-cache-dir --force-reinstall --requirement requirements.txt
 COPY src .
 COPY --from=proto /build/src/app/proto src/app/proto
 
