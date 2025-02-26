@@ -21,6 +21,8 @@ import app.proto.matchFunction_pb2_grpc as match_function_grpc
 
 from app.services.matchFunction import AsyncMatchFunctionService
 
+from app.utils import instrument_sdk_http_client
+
 
 DEFAULT_APP_NAME: str = "app-server"
 DEFAULT_APP_HOSTNAME: str = "localhost"
@@ -150,11 +152,16 @@ async def main(**kwargs) -> None:
 
         config = MyConfigRepository(ab_base_url, ab_client_id, ab_client_secret, ab_namespace)
         token = InMemoryTokenRepository()
+
         sdk = AccelByteSDK()
         sdk.initialize(options={"config": config, "token": token})
+
         logger.info(
             f"accelbyte initialized (base_url: {ab_base_url} client_id: {ab_client_id} namespace: {ab_namespace})"
         )
+
+        instrument_sdk_http_client(sdk=sdk, logger=logger)
+
         result, error = login_client(sdk=sdk)
         if error:
             raise Exception(str(error))
