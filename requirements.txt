@@ -15,9 +15,9 @@ protobuf==3.19.4
 
 accelbyte-py-sdk
 bitarray
-httpx
+httpx[http2]
 mmh3
-pyjwt[crypto]
-pyyaml
+PyJWT[crypto]
+PyYAML
 requests
 websockets
