@@ -1,6 +1,7 @@
 services:
   app:
     build: .
+    init: true
     ports:
       - "6565:6565"
       - "8080:8080"
