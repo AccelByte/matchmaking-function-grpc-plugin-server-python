@@ -1,33 +1,43 @@
+# Copyright (c) 2025 AccelByte Inc. All Rights Reserved.
+# This is licensed software from AccelByte Inc, for limitations
+# and restrictions contact your company contract manager.
+
 # pylint: disable=not-an-iterable
 # pylint: disable=no-member
 # pylint: disable=no-name-in-module
 
 import json
-
-from logging import Logger, getLogger
+from logging import Logger
 from typing import Any, List, Optional
 
 from grpc import StatusCode
 from grpc.aio import AioRpcError, Metadata
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToJson
 
-from app.proto.matchFunction_pb2 import Ticket
-from app.proto.matchFunction_pb2 import GetStatCodesRequest, StatCodesResponse
-from app.proto.matchFunction_pb2 import ValidateTicketRequest, ValidateTicketResponse
-from app.proto.matchFunction_pb2 import EnrichTicketRequest, EnrichTicketResponse
-from app.proto.matchFunction_pb2 import MakeMatchesRequest, MatchResponse
-from app.proto.matchFunction_pb2 import BackfillMakeMatchesRequest, BackfillResponse
-from app.proto.matchFunction_pb2_grpc import MatchFunctionServicer
+from accelbyte_py_sdk import AccelByteSDK
+
+from ..proto.matchFunction_pb2 import (
+    Ticket,
+    GetStatCodesRequest, StatCodesResponse,
+    ValidateTicketRequest, ValidateTicketResponse,
+    EnrichTicketRequest, EnrichTicketResponse,
+    MakeMatchesRequest, MatchResponse,
+    BackfillMakeMatchesRequest, BackfillResponse,
+    DESCRIPTOR,
+)
+from ..proto.matchFunction_pb2_grpc import MatchFunctionServicer
 
 
 class AsyncMatchFunctionService(MatchFunctionServicer):
+    full_name: str = DESCRIPTOR.services_by_name["MatchFunction"].full_name
+
     def __init__(
         self,
+        sdk: Optional[AccelByteSDK] = None,
         logger: Optional[Logger] = None,
     ):
-        self.logger = (
-            logger if logger is not None else getLogger(self.__class__.__name__)
-        )
+        self.sdk = sdk
+        self.logger = logger
 
     async def GetStatCodes(self, request, context):
         self.log_payload(f'{self.GetStatCodes.__name__} request: %s', request)
@@ -126,10 +136,10 @@ class AsyncMatchFunctionService(MatchFunctionServicer):
             details=error,
             debug_error_string=error,
         )
-        
+
+    # noinspection PyShadowingBuiltins
     def log_payload(self, format : str, payload):
         if not self.logger:
             return
-        payload_dict = MessageToDict(payload, preserving_proto_field_name=True)
-        payload_json = json.dumps(payload_dict)
-        self.logger.info(format % payload_json)
+        payload_json = MessageToJson(payload, preserving_proto_field_name=True)
+        self.logger.info(format.format(payload_json))

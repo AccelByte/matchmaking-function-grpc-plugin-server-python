@@ -1,4 +1,3 @@
-import asyncio
 import json
 import unittest
 import uuid
@@ -7,15 +6,9 @@ from typing import Any, Optional
 
 import grpc
 
-from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
-
 from app.proto.matchFunction_pb2 import GetStatCodesRequest, StatCodesResponse
 from app.proto.matchFunction_pb2 import ValidateTicketRequest, ValidateTicketResponse
 from app.proto.matchFunction_pb2 import MakeMatchesRequest, MatchResponse
-from app.proto.matchFunction_pb2_grpc import MatchFunctionStub
-from app.proto.matchFunction_pb2_grpc import add_MatchFunctionServicer_to_server
-
-from app.interceptors.authorization import AuthorizationServerInterceptor
 from app.services.matchFunction import AsyncMatchFunctionService
 from app.utils import aiterize
 
