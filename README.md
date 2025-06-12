@@ -393,81 +393,33 @@ will be accessible at http://localhost:3000.
 
 ## Deploying
 
-After done testing, you may want to deploy this app to `AccelByte Gaming Services`.
+After completing testing, the next step is to deploy your app to `AccelByte Gaming Services`.
 
-1. [Create a new Extend Override App on Admin Portal](https://docs.accelbyte.io/gaming-services/services/extend/override/getting-started-with-matchmaking-customization/#create-an-extend-app). Keep the `Repository URI`.
+1. **Create an Extend Override app**
 
-2. Download and setup [extend-helper-cli](https://github.com/AccelByte/extend-helper-cli/) (only if it has not been done previously).
+   If you do not already have one, create a new [Extend Override App](https://docs.accelbyte.io/gaming-services/services/extend/override/matchmaking/get-started-matchmaking-v2/#create-the-extend-app).
 
-3. Perform docker login with `extend-helper-cli` using the following command.
+   On the **App Detail** page, take note of the following values.
+   - `Namespace`
+   - `App Name`
+
+2. **Build and Push the Container Image**
+
+   Use [extend-helper-cli](https://github.com/AccelByte/extend-helper-cli) to build and upload the container image.
 
    ```
-   extend-helper-cli dockerlogin --namespace <my-game> --app <my-app> --login
+   extend-helper-cli image-upload --login --namespace <namespace> --app <app-name> --image-tag v0.0.1
    ```
 
-   > :exclamation: For your convenience, the above `extend-helper-cli` command can also be 
-   copied from `Repository Authentication Command` under the corresponding app detail page.
+   > :warning: Run this command from your project directory. If you are in a different directory, add the `--work-dir <project-dir>` option to specify the correct path.
+
+3. **Deploy the Image**
    
-4. Build and push this project docker image to AccelByte ECR using the following command.
-   
-   ```
-   extend-helper-cli image-upload --work-dir <my-project-dir> --namespace <my-game> --app <my-app> --image-tag v0.0.1
-   ```
-
-   > :warning: Make sure to perform docker login (step 3) before executing the above command.
-
-5. Open Admin Portal, go to **Extend** -> **Overridable Features**. And then select the extend app.
-
-6. To deploy selected image tag, click **Image Version History** and select 
-   desired image tag to be deployed.
-
-7. Click **Deploy Image**, confirm the deployment and go back to App Detail by 
-   clicking **Cancel**.
-
-8. Wait until app status is running.
+   On the **App Detail** page:
+   - Click **Image Version History**
+   - Select the image you just pushed
+   - Click **Deploy Image**
 
 ## Next Step
 
-Proceed to create your own `Extend Override` app for `matchmaking function` by modifying this project. See [here](https://docs.accelbyte.io/gaming-services/services/extend/override/matchmaking-function/) for more details.
-
-## Additional
-
-### Helper Commands
-
-Helper commands to make development easier.
-
-```
-make venv       # Setting up virtual environment
-make build      # Generating code from proto files
-make test       # Running tests
-make run        # Running the server (without container)
-```
-
-For more details about the command, see [Makefile](Makefile).
-
-### Environment Variables
-
-| Environment Variable           | Description                                                                         | Default                                  |
-|--------------------------------|-------------------------------------------------------------------------------------|------------------------------------------|
-| APP_NAME                       | Used as the service name and the User-Agent for AccelByte endpoints.                | `app-server`                             |
-| AB_BASE_URL                    | AccelByte HTTP base url.                                                            | `https://test.accelbyte.io`              |
-| AB_CLIENT_ID                   | AccelByte Username for HTTP basic auth.                                             |                                          |
-| AB_CLIENT_SECRET               | AccelByte Password for HTTP basic auth.                                             |                                          |
-| AB_NAMESPACE                   |                                                                                     | `accelbyte`                              |
-| PLUGIN_GRPC_SERVER_AUTH_ENABLED|                                                                                     | `true`                                   |
-| ENABLE_INTERCEPTOR_LOGGING     |                                                                                     | `false`                                  |
-| ENABLE_INTERCEPTOR_METRICS     |                                                                                     | `true`                                   |
-| ENABLE_PROMETHEUS              |                                                                                     | `true`                                   |
-| ENABLE_ZIPKIN                  |                                                                                     | `true`                                   |
-| OTEL_EXPORTER_ZIPKIN_ENDPOINT  | Endpoint for Zipkin traces.                                                         | `http://localhost:9411/api/v2/spans`     |
-| OTEL_EXPORTER_ZIPKIN_TIMEOUT   | Maximum time (in milliseconds) the Zipkin exporter will wait for each batch export. | `10000`                                  |
-| PROMETHEUS_ADDR                | Prometheus HTTP server address.                                                     | `0.0.0.0`                                |
-| PROMETHEUS_PORT                | Prometheus HTTP server port.                                                        | `8080`                                   |
-| PROMETHEUS_ENDPOINT            | Prometheus endpoint.                                                                | `/metrics`                               |
-| PROMETHEUS_PREFIX              | Prometheus prefix.                                                                  | `$(camelcase APP_NAME)`                  |
-| TOKEN_VALIDATOR_FETCH_INTERVAL | How often to refetch the JWKS, Revocation List, and Role List (in seconds).         | `3600`                                   |
-
-### Useful Links
-
-- [OpenTelemetry  > Instrumentation > Python](https://opentelemetry.io/docs/instrumentation/python)
-- [Prometheus > Best Practices > Metric and Label Naming](https://prometheus.io/docs/practices/naming)
+Proceed by modifying this `Extend Override` app template to implement your own custom logic. For more details, see [here](https://docs.accelbyte.io/gaming-services/services/extend/override/matchmaking/customization-matchmaking-v2/).
