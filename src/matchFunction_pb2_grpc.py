@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from app.proto import matchFunction_pb2 as app_dot_proto_dot_matchFunction__pb2
+import matchFunction_pb2 as matchFunction__pb2
 
 
 class MatchFunctionStub(object):
@@ -16,28 +16,28 @@ class MatchFunctionStub(object):
         """
         self.GetStatCodes = channel.unary_unary(
                 '/accelbyte.matchmaking.matchfunction.MatchFunction/GetStatCodes',
-                request_serializer=app_dot_proto_dot_matchFunction__pb2.GetStatCodesRequest.SerializeToString,
-                response_deserializer=app_dot_proto_dot_matchFunction__pb2.StatCodesResponse.FromString,
+                request_serializer=matchFunction__pb2.GetStatCodesRequest.SerializeToString,
+                response_deserializer=matchFunction__pb2.StatCodesResponse.FromString,
                 )
         self.ValidateTicket = channel.unary_unary(
                 '/accelbyte.matchmaking.matchfunction.MatchFunction/ValidateTicket',
-                request_serializer=app_dot_proto_dot_matchFunction__pb2.ValidateTicketRequest.SerializeToString,
-                response_deserializer=app_dot_proto_dot_matchFunction__pb2.ValidateTicketResponse.FromString,
+                request_serializer=matchFunction__pb2.ValidateTicketRequest.SerializeToString,
+                response_deserializer=matchFunction__pb2.ValidateTicketResponse.FromString,
                 )
         self.EnrichTicket = channel.unary_unary(
                 '/accelbyte.matchmaking.matchfunction.MatchFunction/EnrichTicket',
-                request_serializer=app_dot_proto_dot_matchFunction__pb2.EnrichTicketRequest.SerializeToString,
-                response_deserializer=app_dot_proto_dot_matchFunction__pb2.EnrichTicketResponse.FromString,
+                request_serializer=matchFunction__pb2.EnrichTicketRequest.SerializeToString,
+                response_deserializer=matchFunction__pb2.EnrichTicketResponse.FromString,
                 )
         self.MakeMatches = channel.stream_stream(
                 '/accelbyte.matchmaking.matchfunction.MatchFunction/MakeMatches',
-                request_serializer=app_dot_proto_dot_matchFunction__pb2.MakeMatchesRequest.SerializeToString,
-                response_deserializer=app_dot_proto_dot_matchFunction__pb2.MatchResponse.FromString,
+                request_serializer=matchFunction__pb2.MakeMatchesRequest.SerializeToString,
+                response_deserializer=matchFunction__pb2.MatchResponse.FromString,
                 )
         self.BackfillMatches = channel.stream_stream(
                 '/accelbyte.matchmaking.matchfunction.MatchFunction/BackfillMatches',
-                request_serializer=app_dot_proto_dot_matchFunction__pb2.BackfillMakeMatchesRequest.SerializeToString,
-                response_deserializer=app_dot_proto_dot_matchFunction__pb2.BackfillResponse.FromString,
+                request_serializer=matchFunction__pb2.BackfillMakeMatchesRequest.SerializeToString,
+                response_deserializer=matchFunction__pb2.BackfillResponse.FromString,
                 )
 
 
@@ -79,28 +79,28 @@ def add_MatchFunctionServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetStatCodes': grpc.unary_unary_rpc_method_handler(
                     servicer.GetStatCodes,
-                    request_deserializer=app_dot_proto_dot_matchFunction__pb2.GetStatCodesRequest.FromString,
-                    response_serializer=app_dot_proto_dot_matchFunction__pb2.StatCodesResponse.SerializeToString,
+                    request_deserializer=matchFunction__pb2.GetStatCodesRequest.FromString,
+                    response_serializer=matchFunction__pb2.StatCodesResponse.SerializeToString,
             ),
             'ValidateTicket': grpc.unary_unary_rpc_method_handler(
                     servicer.ValidateTicket,
-                    request_deserializer=app_dot_proto_dot_matchFunction__pb2.ValidateTicketRequest.FromString,
-                    response_serializer=app_dot_proto_dot_matchFunction__pb2.ValidateTicketResponse.SerializeToString,
+                    request_deserializer=matchFunction__pb2.ValidateTicketRequest.FromString,
+                    response_serializer=matchFunction__pb2.ValidateTicketResponse.SerializeToString,
             ),
             'EnrichTicket': grpc.unary_unary_rpc_method_handler(
                     servicer.EnrichTicket,
-                    request_deserializer=app_dot_proto_dot_matchFunction__pb2.EnrichTicketRequest.FromString,
-                    response_serializer=app_dot_proto_dot_matchFunction__pb2.EnrichTicketResponse.SerializeToString,
+                    request_deserializer=matchFunction__pb2.EnrichTicketRequest.FromString,
+                    response_serializer=matchFunction__pb2.EnrichTicketResponse.SerializeToString,
             ),
             'MakeMatches': grpc.stream_stream_rpc_method_handler(
                     servicer.MakeMatches,
-                    request_deserializer=app_dot_proto_dot_matchFunction__pb2.MakeMatchesRequest.FromString,
-                    response_serializer=app_dot_proto_dot_matchFunction__pb2.MatchResponse.SerializeToString,
+                    request_deserializer=matchFunction__pb2.MakeMatchesRequest.FromString,
+                    response_serializer=matchFunction__pb2.MatchResponse.SerializeToString,
             ),
             'BackfillMatches': grpc.stream_stream_rpc_method_handler(
                     servicer.BackfillMatches,
-                    request_deserializer=app_dot_proto_dot_matchFunction__pb2.BackfillMakeMatchesRequest.FromString,
-                    response_serializer=app_dot_proto_dot_matchFunction__pb2.BackfillResponse.SerializeToString,
+                    request_deserializer=matchFunction__pb2.BackfillMakeMatchesRequest.FromString,
+                    response_serializer=matchFunction__pb2.BackfillResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -124,8 +124,8 @@ class MatchFunction(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/accelbyte.matchmaking.matchfunction.MatchFunction/GetStatCodes',
-            app_dot_proto_dot_matchFunction__pb2.GetStatCodesRequest.SerializeToString,
-            app_dot_proto_dot_matchFunction__pb2.StatCodesResponse.FromString,
+            matchFunction__pb2.GetStatCodesRequest.SerializeToString,
+            matchFunction__pb2.StatCodesResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -141,8 +141,8 @@ class MatchFunction(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/accelbyte.matchmaking.matchfunction.MatchFunction/ValidateTicket',
-            app_dot_proto_dot_matchFunction__pb2.ValidateTicketRequest.SerializeToString,
-            app_dot_proto_dot_matchFunction__pb2.ValidateTicketResponse.FromString,
+            matchFunction__pb2.ValidateTicketRequest.SerializeToString,
+            matchFunction__pb2.ValidateTicketResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -158,8 +158,8 @@ class MatchFunction(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/accelbyte.matchmaking.matchfunction.MatchFunction/EnrichTicket',
-            app_dot_proto_dot_matchFunction__pb2.EnrichTicketRequest.SerializeToString,
-            app_dot_proto_dot_matchFunction__pb2.EnrichTicketResponse.FromString,
+            matchFunction__pb2.EnrichTicketRequest.SerializeToString,
+            matchFunction__pb2.EnrichTicketResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -175,8 +175,8 @@ class MatchFunction(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/accelbyte.matchmaking.matchfunction.MatchFunction/MakeMatches',
-            app_dot_proto_dot_matchFunction__pb2.MakeMatchesRequest.SerializeToString,
-            app_dot_proto_dot_matchFunction__pb2.MatchResponse.FromString,
+            matchFunction__pb2.MakeMatchesRequest.SerializeToString,
+            matchFunction__pb2.MatchResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -192,7 +192,7 @@ class MatchFunction(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/accelbyte.matchmaking.matchfunction.MatchFunction/BackfillMatches',
-            app_dot_proto_dot_matchFunction__pb2.BackfillMakeMatchesRequest.SerializeToString,
-            app_dot_proto_dot_matchFunction__pb2.BackfillResponse.FromString,
+            matchFunction__pb2.BackfillMakeMatchesRequest.SerializeToString,
+            matchFunction__pb2.BackfillResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

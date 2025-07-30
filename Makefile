@@ -1,56 +1,29 @@
-# Copyright (c) 2022 AccelByte Inc. All Rights Reserved.
+# Copyright (c) 2025 AccelByte Inc. All Rights Reserved.
 # This is licensed software from AccelByte Inc, for limitations
 # and restrictions contact your company contract manager.
 
 SHELL := /bin/bash
 
-IMAGE_NAME := $(shell basename "$$(pwd)")-app
+IMAGE_NAME ?= $(shell basename "$$(pwd)")-app
 BUILDER := extend-builder
 
-PYTHON_VERSION := 3.10
+.PHONY: proto build
 
-SOURCE_DIR := src
-
-clean:
-	cd ${SOURCE_DIR}/app/proto \
-		&& rm -fv *_grpc.py *_pb2.py *_pb2.pyi *_pb2_grpc.py
-
-proto: clean
-	docker run -t --rm -u $$(id -u):$$(id -g) -v $$(pwd):/data/ -w /data rvolosatovs/protoc:4.0.0 \
-			--proto_path=app/proto=${SOURCE_DIR}/app/proto \
-			--python_out=${SOURCE_DIR} \
-			--grpc-python_out=${SOURCE_DIR} \
-			${SOURCE_DIR}/app/proto/*.proto
+proto:
+	docker run --tty --rm --user $$(id -u):$$(id -g) \
+		--volume $$(pwd):/build \
+		--workdir /build \
+		--entrypoint /bin/bash \
+		rvolosatovs/protoc:4.1.0 \
+			proto.sh
 
 build: proto
 
-run:
-	docker run --rm -it -u $$(id -u):$$(id -g) \
-		-e HOME=/data \
-		--env-file .env \
-		-v $$(pwd):/data \
-		-w /data \
-		--entrypoint /bin/sh \
-		python:${PYTHON_VERSION}-slim \
-		-c 'python -m pip install -r requirements.txt \
-			&& PYTHONPATH=${SOURCE_DIR} GRPC_VERBOSITY=debug python -m app --enable_reflection'
-
-help:
-	docker run --rm -it -u $$(id -u):$$(id -g) \
-		-e HOME=/data \
-		--env-file .env \
-		-v $$(pwd):/data \
-		-w /data \
-		--entrypoint /bin/sh \
-		python:${PYTHON_VERSION}-slim \
-		-c 'python -m pip install -r requirements.txt \
-			&& PYTHONPATH=${SOURCE_DIR} python -m app --help'
-
 image:
-	docker buildx build -t ${IMAGE_NAME} --load .
+	docker build -t ${IMAGE_NAME} -f Dockerfile .
 
 imagex:
-	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use 
+	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use
 	docker buildx build -t ${IMAGE_NAME} --platform linux/amd64 .
 	docker buildx build -t ${IMAGE_NAME} --load .
 	docker buildx rm --keep-state $(BUILDER)

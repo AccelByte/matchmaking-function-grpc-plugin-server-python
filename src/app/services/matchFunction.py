@@ -16,7 +16,7 @@ from google.protobuf.json_format import MessageToJson
 
 from accelbyte_py_sdk import AccelByteSDK
 
-from ..proto.matchFunction_pb2 import (
+from matchFunction_pb2 import (
     Ticket,
     GetStatCodesRequest, StatCodesResponse,
     ValidateTicketRequest, ValidateTicketResponse,
@@ -25,7 +25,7 @@ from ..proto.matchFunction_pb2 import (
     BackfillMakeMatchesRequest, BackfillResponse,
     DESCRIPTOR,
 )
-from ..proto.matchFunction_pb2_grpc import MatchFunctionServicer
+from matchFunction_pb2_grpc import MatchFunctionServicer
 
 
 class AsyncMatchFunctionService(MatchFunctionServicer):

@@ -26,7 +26,7 @@ from accelbyte_grpc_plugin.app import (
 )
 from accelbyte_grpc_plugin.utils import instrument_sdk_http_client
 
-from .proto.matchFunction_pb2_grpc import add_MatchFunctionServicer_to_server
+from matchFunction_pb2_grpc import add_MatchFunctionServicer_to_server
 from .services.matchFunction import AsyncMatchFunctionService
 from .utils import create_env
 

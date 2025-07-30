@@ -1,41 +1,68 @@
-# Copyright (c) 2024 AccelByte Inc. All Rights Reserved.
+# Copyright (c) 2025 AccelByte Inc. All Rights Reserved.
 # This is licensed software from AccelByte Inc, for limitations
 # and restrictions contact your company contract manager.
 
-FROM rvolosatovs/protoc:4.1.0 AS proto
-WORKDIR /build
-COPY src/app/proto src/app/proto
-RUN protoc --proto_path=app/proto=src/app/proto \
-        --python_out=src \
-        --grpc-python_out=src \
-        src/app/proto/*.proto
+# ----------------------------------------
+# Stage 1: Protoc Code Generation
+# ----------------------------------------
+FROM --platform=$BUILDPLATFORM rvolosatovs/protoc:4.1.0 AS proto-builder
 
-# Extend App
+# Set working directory.
+WORKDIR /build
+
+# Copy proto sources and generator script.
+COPY proto.sh .
+COPY proto/ proto/
+
+# Make script executable and run it.
+RUN chmod +x proto.sh && \
+    ./proto.sh
+
+
+
+# ----------------------------------------
+# Stage 2: Runtime Container
+# ----------------------------------------
 FROM ubuntu:22.04
 
+# Install Python and Upgrade Pip
 RUN apt update && \
-    apt install -y python3-pip python-is-python3 && \
+    apt install -y --no-install-recommends \
+        python3-pip python-is-python3 && \
     python -m pip install --no-cache-dir --upgrade pip && \
     apt upgrade -y && \
     apt dist-upgrade -y && \
+    apt purge -y && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Keeps Python from generating .pyc files in the container
+# Keeps Python from generating .pyc files in the container.
 ENV PYTHONDONTWRITEBYTECODE=1
-# Turns off buffering for easier container logging
+
+# Turns off buffering for easier container logging.
 ENV PYTHONUNBUFFERED=1
 
-# Install pip requirements
+# Set working directory.
 WORKDIR /app
-COPY requirements.txt requirements.txt
-RUN python -m pip install --no-cache-dir --force-reinstall --requirement requirements.txt
-COPY src .
-COPY --from=proto /build/src/app/proto src/app/proto
 
-# Plugin arch gRPC server port
+# Install Python dependencies.
+COPY requirements.txt .
+RUN python -m pip install \
+    --no-cache-dir \
+    --force-reinstall \
+    --requirement requirements.txt
+
+# Copy application code.
+COPY src/ .
+
+# Copy generated protobuf files from stage 1.
+COPY --from=proto-builder /build/src/ .
+
+# Plugin Arch gRPC Server Port.
 EXPOSE 6565
-# Prometheus /metrics web server port
+
+# Prometheus /metrics Web Server Port.
 EXPOSE 8080
 
+# Entrypoint.
 ENTRYPOINT ["python", "-m", "app"]
