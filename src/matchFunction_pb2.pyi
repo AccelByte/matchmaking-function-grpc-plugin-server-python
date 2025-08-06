@@ -8,7 +8,7 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class BackfillMakeMatchesRequest(_message.Message):
-    __slots__ = ["backfill_ticket", "parameters"]
+    __slots__ = ["backfill_ticket", "parameters", "ticket"]
     class MakeMatchesParameters(_message.Message):
         __slots__ = ["rules", "scope"]
         RULES_FIELD_NUMBER: _ClassVar[int]
@@ -18,9 +18,11 @@ class BackfillMakeMatchesRequest(_message.Message):
         def __init__(self, scope: _Optional[_Union[Scope, _Mapping]] = ..., rules: _Optional[_Union[Rules, _Mapping]] = ...) -> None: ...
     BACKFILL_TICKET_FIELD_NUMBER: _ClassVar[int]
     PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    TICKET_FIELD_NUMBER: _ClassVar[int]
     backfill_ticket: BackfillTicket
     parameters: BackfillMakeMatchesRequest.MakeMatchesParameters
-    def __init__(self, parameters: _Optional[_Union[BackfillMakeMatchesRequest.MakeMatchesParameters, _Mapping]] = ..., backfill_ticket: _Optional[_Union[BackfillTicket, _Mapping]] = ...) -> None: ...
+    ticket: Ticket
+    def __init__(self, parameters: _Optional[_Union[BackfillMakeMatchesRequest.MakeMatchesParameters, _Mapping]] = ..., backfill_ticket: _Optional[_Union[BackfillTicket, _Mapping]] = ..., ticket: _Optional[_Union[Ticket, _Mapping]] = ...) -> None: ...
 
 class BackfillProposal(_message.Message):
     __slots__ = ["CreatedAt", "added_tickets", "backfill_ticket_id", "match_pool", "match_session_id", "proposal_id", "proposed_teams"]
