@@ -21,20 +21,53 @@ RUN chmod +x proto.sh && \
 
 
 # ----------------------------------------
-# Stage 2: Runtime Container
+# Stage 2: Builder
 # ----------------------------------------
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS builder
 
-# Install Python and Upgrade Pip
+# Keeps Python from generating .pyc files in the container.
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Turns off buffering for easier container logging.
+ENV PYTHONUNBUFFERED=1
+
+# Install Python.
 RUN apt update && \
     apt install -y --no-install-recommends \
-        python3-pip python-is-python3 && \
-    python -m pip install --no-cache-dir --upgrade pip && \
-    apt upgrade -y && \
-    apt dist-upgrade -y && \
-    apt purge -y && \
+        python3-venv && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN useradd user
+
+# Set working directory.
+WORKDIR /build
+
+# Create and activate virtual environment.
+RUN python3 -m venv venv
+ENV PATH="/build/venv/bin:$PATH"
+
+# Install Python dependencies.
+COPY requirements.txt .
+RUN python3 -m pip install \
+    --no-cache-dir \
+    --requirement requirements.txt
+
+# Copy application code.
+COPY src/ .
+
+# Copy generated protobuf files from stage 1.
+COPY --from=proto-builder /build/src/ . 
+
+# Fix up python3 symlink for use in chiseled Ubuntu.
+RUN ln -sf /usr/bin/python3 /build/venv/bin/python3 
+
+
+
+# ----------------------------------------
+# Stage 3: Runtime Container
+# ----------------------------------------
+FROM ubuntu/python:3.10-22.04_stable
 
 # Keeps Python from generating .pyc files in the container.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -45,18 +78,15 @@ ENV PYTHONUNBUFFERED=1
 # Set working directory.
 WORKDIR /app
 
-# Install Python dependencies.
-COPY requirements.txt .
-RUN python -m pip install \
-    --no-cache-dir \
-    --force-reinstall \
-    --requirement requirements.txt
+# Copy build from stage 2.
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+COPY --from=builder /build/ .
 
-# Copy application code.
-COPY src/ .
+USER user
 
-# Copy generated protobuf files from stage 1.
-COPY --from=proto-builder /build/src/ .
+# Activate virtual environment.
+ENV PATH="/app/venv/bin:$PATH"
 
 # Plugin Arch gRPC Server Port.
 EXPOSE 6565
@@ -65,4 +95,4 @@ EXPOSE 6565
 EXPOSE 8080
 
 # Entrypoint.
-ENTRYPOINT ["python", "-m", "app"]
+ENTRYPOINT ["python3", "-m", "app"]
