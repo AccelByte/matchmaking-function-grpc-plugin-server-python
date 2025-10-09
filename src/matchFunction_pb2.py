@@ -15,7 +15,7 @@ from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13matchFunction.proto\x12#accelbyte.matchmaking.matchfunction\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"P\n\x13GetStatCodesRequest\x12\x39\n\x05rules\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\"\"\n\x11StatCodesResponse\x12\r\n\x05\x63odes\x18\x01 \x03(\t\"\x8f\x01\n\x15ValidateTicketRequest\x12;\n\x06ticket\x18\x01 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\".\n\x16ValidateTicketResponse\x12\x14\n\x0cvalid_ticket\x18\x01 \x01(\x08\"\x8d\x01\n\x13\x45nrichTicketRequest\x12;\n\x06ticket\x18\x01 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\"S\n\x14\x45nrichTicketResponse\x12;\n\x06ticket\x18\x01 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\"\xd8\x02\n\x12MakeMatchesRequest\x12\x63\n\nparameters\x18\x01 \x01(\x0b\x32M.accelbyte.matchmaking.matchfunction.MakeMatchesRequest.MakeMatchesParametersH\x00\x12=\n\x06ticket\x18\x02 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.TicketH\x00\x1a\x8d\x01\n\x15MakeMatchesParameters\x12\x39\n\x05scope\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Scope\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.RulesB\x0e\n\x0crequest_type\"J\n\rMatchResponse\x12\x39\n\x05match\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Match\"\x1c\n\x05Scope\x12\x13\n\x0b\x61\x62_trace_id\x18\x01 \x01(\t\"\x15\n\x05Rules\x12\x0c\n\x04json\x18\x01 \x01(\t\"+\n\x05Party\x12\x10\n\x08party_id\x18\x01 \x01(\t\x12\x10\n\x08user_ids\x18\x02 \x03(\t\"\xb0\x03\n\x05Match\x12<\n\x07tickets\x18\x01 \x03(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12>\n\x05teams\x18\x02 \x03(\x0b\x32/.accelbyte.matchmaking.matchfunction.Match.Team\x12\x1a\n\x12region_preferences\x18\x03 \x03(\t\x12\x31\n\x10match_attributes\x18\x04 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x10\n\x08\x62\x61\x63kfill\x18\x05 \x01(\x08\x12\x13\n\x0bserver_name\x18\x06 \x01(\t\x12\x16\n\x0e\x63lient_version\x18\x07 \x01(\t\x12\x44\n\x0bserver_pool\x18\x08 \x01(\x0b\x32/.accelbyte.matchmaking.matchfunction.ServerPool\x1aU\n\x04Team\x12\x10\n\x08user_ids\x18\x01 \x03(\t\x12;\n\x07parties\x18\x02 \x03(\x0b\x32*.accelbyte.matchmaking.matchfunction.Party\"M\n\nServerPool\x12\x17\n\x0fserver_provider\x18\x01 \x01(\t\x12\x12\n\ndeployment\x18\x02 \x01(\t\x12\x12\n\nclaim_keys\x18\x03 \x03(\t\"\xd7\x03\n\x06Ticket\x12\x11\n\tticket_id\x18\x01 \x01(\t\x12\x12\n\nmatch_pool\x18\x02 \x01(\t\x12-\n\tCreatedAt\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12G\n\x07players\x18\x04 \x03(\x0b\x32\x36.accelbyte.matchmaking.matchfunction.Ticket.PlayerData\x12\x32\n\x11ticket_attributes\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12M\n\tlatencies\x18\x06 \x03(\x0b\x32:.accelbyte.matchmaking.matchfunction.Ticket.LatenciesEntry\x12\x18\n\x10party_session_id\x18\x07 \x01(\t\x12\x11\n\tnamespace\x18\x08 \x01(\t\x1aL\n\nPlayerData\x12\x11\n\tplayer_id\x18\x01 \x01(\t\x12+\n\nattributes\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct\x1a\x30\n\x0eLatenciesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x03:\x02\x38\x01\"\x8f\x03\n\x10\x42\x61\x63kfillProposal\x12\x1a\n\x12\x62\x61\x63kfill_ticket_id\x18\x01 \x01(\t\x12-\n\tCreatedAt\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x42\n\radded_tickets\x18\x03 \x03(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12R\n\x0eproposed_teams\x18\x04 \x03(\x0b\x32:.accelbyte.matchmaking.matchfunction.BackfillProposal.Team\x12\x13\n\x0bproposal_id\x18\x05 \x01(\t\x12\x12\n\nmatch_pool\x18\x06 \x01(\t\x12\x18\n\x10match_session_id\x18\x07 \x01(\t\x1aU\n\x04Team\x12\x10\n\x08user_ids\x18\x01 \x03(\t\x12;\n\x07parties\x18\x02 \x03(\x0b\x32*.accelbyte.matchmaking.matchfunction.Party\"\xb8\x03\n\x1a\x42\x61\x63kfillMakeMatchesRequest\x12k\n\nparameters\x18\x01 \x01(\x0b\x32U.accelbyte.matchmaking.matchfunction.BackfillMakeMatchesRequest.MakeMatchesParametersH\x00\x12N\n\x0f\x62\x61\x63kfill_ticket\x18\x02 \x01(\x0b\x32\x33.accelbyte.matchmaking.matchfunction.BackfillTicketH\x00\x12=\n\x06ticket\x18\x03 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.TicketH\x00\x1a\x8d\x01\n\x15MakeMatchesParameters\x12\x39\n\x05scope\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Scope\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.RulesB\x0e\n\x0crequest_type\"d\n\x10\x42\x61\x63kfillResponse\x12P\n\x11\x62\x61\x63kfill_proposal\x18\x01 \x01(\x0b\x32\x35.accelbyte.matchmaking.matchfunction.BackfillProposal\"\xd6\x04\n\x0e\x42\x61\x63kfillTicket\x12\x11\n\tticket_id\x18\x01 \x01(\t\x12\x12\n\nmatch_pool\x18\x02 \x01(\t\x12-\n\tCreatedAt\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12W\n\rpartial_match\x18\x04 \x01(\x0b\x32@.accelbyte.matchmaking.matchfunction.BackfillTicket.PartialMatch\x12\x18\n\x10match_session_id\x18\x05 \x01(\t\x1aU\n\x04Team\x12\x10\n\x08user_ids\x18\x01 \x03(\t\x12;\n\x07parties\x18\x02 \x03(\x0b\x32*.accelbyte.matchmaking.matchfunction.Party\x1a\xa3\x02\n\x0cPartialMatch\x12<\n\x07tickets\x18\x01 \x03(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12G\n\x05teams\x18\x02 \x03(\x0b\x32\x38.accelbyte.matchmaking.matchfunction.BackfillTicket.Team\x12\x1a\n\x12region_preferences\x18\x03 \x03(\t\x12\x31\n\x10match_attributes\x18\x04 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x10\n\x08\x62\x61\x63kfill\x18\x05 \x01(\x08\x12\x13\n\x0bserver_name\x18\x06 \x01(\t\x12\x16\n\x0e\x63lient_version\x18\x07 \x01(\t2\xb4\x05\n\rMatchFunction\x12\x80\x01\n\x0cGetStatCodes\x12\x38.accelbyte.matchmaking.matchfunction.GetStatCodesRequest\x1a\x36.accelbyte.matchmaking.matchfunction.StatCodesResponse\x12\x89\x01\n\x0eValidateTicket\x12:.accelbyte.matchmaking.matchfunction.ValidateTicketRequest\x1a;.accelbyte.matchmaking.matchfunction.ValidateTicketResponse\x12\x83\x01\n\x0c\x45nrichTicket\x12\x38.accelbyte.matchmaking.matchfunction.EnrichTicketRequest\x1a\x39.accelbyte.matchmaking.matchfunction.EnrichTicketResponse\x12~\n\x0bMakeMatches\x12\x37.accelbyte.matchmaking.matchfunction.MakeMatchesRequest\x1a\x32.accelbyte.matchmaking.matchfunction.MatchResponse(\x01\x30\x01\x12\x8d\x01\n\x0f\x42\x61\x63kfillMatches\x12?.accelbyte.matchmaking.matchfunction.BackfillMakeMatchesRequest\x1a\x35.accelbyte.matchmaking.matchfunction.BackfillResponse(\x01\x30\x01\x42\x80\x01\n)net.accelbyte.matchmakingv2.matchfunctionP\x01Z)accelbyte.net/matchmakingv2/matchfunction\xaa\x02%AccelByte.MatchmakingV2.MatchFunctionb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13matchFunction.proto\x12#accelbyte.matchmaking.matchfunction\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"P\n\x13GetStatCodesRequest\x12\x39\n\x05rules\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\"\"\n\x11StatCodesResponse\x12\r\n\x05\x63odes\x18\x01 \x03(\t\"\x8f\x01\n\x15ValidateTicketRequest\x12;\n\x06ticket\x18\x01 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\".\n\x16ValidateTicketResponse\x12\x14\n\x0cvalid_ticket\x18\x01 \x01(\x08\"\x8d\x01\n\x13\x45nrichTicketRequest\x12;\n\x06ticket\x18\x01 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\"S\n\x14\x45nrichTicketResponse\x12;\n\x06ticket\x18\x01 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\"\xe8\x02\n\x12MakeMatchesRequest\x12\x63\n\nparameters\x18\x01 \x01(\x0b\x32M.accelbyte.matchmaking.matchfunction.MakeMatchesRequest.MakeMatchesParametersH\x00\x12=\n\x06ticket\x18\x02 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.TicketH\x00\x1a\x9d\x01\n\x15MakeMatchesParameters\x12\x39\n\x05scope\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Scope\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\x12\x0e\n\x06tickId\x18\x03 \x01(\x04\x42\x0e\n\x0crequest_type\"J\n\rMatchResponse\x12\x39\n\x05match\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Match\"\x1c\n\x05Scope\x12\x13\n\x0b\x61\x62_trace_id\x18\x01 \x01(\t\"\x15\n\x05Rules\x12\x0c\n\x04json\x18\x01 \x01(\t\"+\n\x05Party\x12\x10\n\x08party_id\x18\x01 \x01(\t\x12\x10\n\x08user_ids\x18\x02 \x03(\t\"\xc1\x03\n\x05Match\x12<\n\x07tickets\x18\x01 \x03(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12>\n\x05teams\x18\x02 \x03(\x0b\x32/.accelbyte.matchmaking.matchfunction.Match.Team\x12\x1a\n\x12region_preferences\x18\x03 \x03(\t\x12\x31\n\x10match_attributes\x18\x04 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x10\n\x08\x62\x61\x63kfill\x18\x05 \x01(\x08\x12\x13\n\x0bserver_name\x18\x06 \x01(\t\x12\x16\n\x0e\x63lient_version\x18\x07 \x01(\t\x12\x44\n\x0bserver_pool\x18\x08 \x01(\x0b\x32/.accelbyte.matchmaking.matchfunction.ServerPool\x1a\x66\n\x04Team\x12\x10\n\x08user_ids\x18\x01 \x03(\t\x12;\n\x07parties\x18\x02 \x03(\x0b\x32*.accelbyte.matchmaking.matchfunction.Party\x12\x0f\n\x07team_id\x18\x03 \x01(\t\"M\n\nServerPool\x12\x17\n\x0fserver_provider\x18\x01 \x01(\t\x12\x12\n\ndeployment\x18\x02 \x01(\t\x12\x12\n\nclaim_keys\x18\x03 \x03(\t\"\xd7\x03\n\x06Ticket\x12\x11\n\tticket_id\x18\x01 \x01(\t\x12\x12\n\nmatch_pool\x18\x02 \x01(\t\x12-\n\tCreatedAt\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12G\n\x07players\x18\x04 \x03(\x0b\x32\x36.accelbyte.matchmaking.matchfunction.Ticket.PlayerData\x12\x32\n\x11ticket_attributes\x18\x05 \x01(\x0b\x32\x17.google.protobuf.Struct\x12M\n\tlatencies\x18\x06 \x03(\x0b\x32:.accelbyte.matchmaking.matchfunction.Ticket.LatenciesEntry\x12\x18\n\x10party_session_id\x18\x07 \x01(\t\x12\x11\n\tnamespace\x18\x08 \x01(\t\x1aL\n\nPlayerData\x12\x11\n\tplayer_id\x18\x01 \x01(\t\x12+\n\nattributes\x18\x02 \x01(\x0b\x32\x17.google.protobuf.Struct\x1a\x30\n\x0eLatenciesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x03:\x02\x38\x01\"\xcd\x03\n\x10\x42\x61\x63kfillProposal\x12\x1a\n\x12\x62\x61\x63kfill_ticket_id\x18\x01 \x01(\t\x12-\n\tCreatedAt\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x42\n\radded_tickets\x18\x03 \x03(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12R\n\x0eproposed_teams\x18\x04 \x03(\x0b\x32:.accelbyte.matchmaking.matchfunction.BackfillProposal.Team\x12\x13\n\x0bproposal_id\x18\x05 \x01(\t\x12\x12\n\nmatch_pool\x18\x06 \x01(\t\x12\x18\n\x10match_session_id\x18\x07 \x01(\t\x12+\n\nattributes\x18\x08 \x01(\x0b\x32\x17.google.protobuf.Struct\x1a\x66\n\x04Team\x12\x10\n\x08user_ids\x18\x01 \x03(\t\x12;\n\x07parties\x18\x02 \x03(\x0b\x32*.accelbyte.matchmaking.matchfunction.Party\x12\x0f\n\x07team_id\x18\x03 \x01(\t\"\xc8\x03\n\x1a\x42\x61\x63kfillMakeMatchesRequest\x12k\n\nparameters\x18\x01 \x01(\x0b\x32U.accelbyte.matchmaking.matchfunction.BackfillMakeMatchesRequest.MakeMatchesParametersH\x00\x12N\n\x0f\x62\x61\x63kfill_ticket\x18\x02 \x01(\x0b\x32\x33.accelbyte.matchmaking.matchfunction.BackfillTicketH\x00\x12=\n\x06ticket\x18\x03 \x01(\x0b\x32+.accelbyte.matchmaking.matchfunction.TicketH\x00\x1a\x9d\x01\n\x15MakeMatchesParameters\x12\x39\n\x05scope\x18\x01 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Scope\x12\x39\n\x05rules\x18\x02 \x01(\x0b\x32*.accelbyte.matchmaking.matchfunction.Rules\x12\x0e\n\x06tickId\x18\x03 \x01(\x04\x42\x0e\n\x0crequest_type\"d\n\x10\x42\x61\x63kfillResponse\x12P\n\x11\x62\x61\x63kfill_proposal\x18\x01 \x01(\x0b\x32\x35.accelbyte.matchmaking.matchfunction.BackfillProposal\"\xe7\x04\n\x0e\x42\x61\x63kfillTicket\x12\x11\n\tticket_id\x18\x01 \x01(\t\x12\x12\n\nmatch_pool\x18\x02 \x01(\t\x12-\n\tCreatedAt\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12W\n\rpartial_match\x18\x04 \x01(\x0b\x32@.accelbyte.matchmaking.matchfunction.BackfillTicket.PartialMatch\x12\x18\n\x10match_session_id\x18\x05 \x01(\t\x1a\x66\n\x04Team\x12\x10\n\x08user_ids\x18\x01 \x03(\t\x12;\n\x07parties\x18\x02 \x03(\x0b\x32*.accelbyte.matchmaking.matchfunction.Party\x12\x0f\n\x07team_id\x18\x03 \x01(\t\x1a\xa3\x02\n\x0cPartialMatch\x12<\n\x07tickets\x18\x01 \x03(\x0b\x32+.accelbyte.matchmaking.matchfunction.Ticket\x12G\n\x05teams\x18\x02 \x03(\x0b\x32\x38.accelbyte.matchmaking.matchfunction.BackfillTicket.Team\x12\x1a\n\x12region_preferences\x18\x03 \x03(\t\x12\x31\n\x10match_attributes\x18\x04 \x01(\x0b\x32\x17.google.protobuf.Struct\x12\x10\n\x08\x62\x61\x63kfill\x18\x05 \x01(\x08\x12\x13\n\x0bserver_name\x18\x06 \x01(\t\x12\x16\n\x0e\x63lient_version\x18\x07 \x01(\t2\xb4\x05\n\rMatchFunction\x12\x80\x01\n\x0cGetStatCodes\x12\x38.accelbyte.matchmaking.matchfunction.GetStatCodesRequest\x1a\x36.accelbyte.matchmaking.matchfunction.StatCodesResponse\x12\x89\x01\n\x0eValidateTicket\x12:.accelbyte.matchmaking.matchfunction.ValidateTicketRequest\x1a;.accelbyte.matchmaking.matchfunction.ValidateTicketResponse\x12\x83\x01\n\x0c\x45nrichTicket\x12\x38.accelbyte.matchmaking.matchfunction.EnrichTicketRequest\x1a\x39.accelbyte.matchmaking.matchfunction.EnrichTicketResponse\x12~\n\x0bMakeMatches\x12\x37.accelbyte.matchmaking.matchfunction.MakeMatchesRequest\x1a\x32.accelbyte.matchmaking.matchfunction.MatchResponse(\x01\x30\x01\x12\x8d\x01\n\x0f\x42\x61\x63kfillMatches\x12?.accelbyte.matchmaking.matchfunction.BackfillMakeMatchesRequest\x1a\x35.accelbyte.matchmaking.matchfunction.BackfillResponse(\x01\x30\x01\x42\x80\x01\n)net.accelbyte.matchmakingv2.matchfunctionP\x01Z)accelbyte.net/matchmakingv2/matchfunction\xaa\x02%AccelByte.MatchmakingV2.MatchFunctionb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'matchFunction_pb2', globals())
@@ -38,45 +38,45 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _ENRICHTICKETRESPONSE._serialized_start=579
   _ENRICHTICKETRESPONSE._serialized_end=662
   _MAKEMATCHESREQUEST._serialized_start=665
-  _MAKEMATCHESREQUEST._serialized_end=1009
+  _MAKEMATCHESREQUEST._serialized_end=1025
   _MAKEMATCHESREQUEST_MAKEMATCHESPARAMETERS._serialized_start=852
-  _MAKEMATCHESREQUEST_MAKEMATCHESPARAMETERS._serialized_end=993
-  _MATCHRESPONSE._serialized_start=1011
-  _MATCHRESPONSE._serialized_end=1085
-  _SCOPE._serialized_start=1087
-  _SCOPE._serialized_end=1115
-  _RULES._serialized_start=1117
-  _RULES._serialized_end=1138
-  _PARTY._serialized_start=1140
-  _PARTY._serialized_end=1183
-  _MATCH._serialized_start=1186
-  _MATCH._serialized_end=1618
-  _MATCH_TEAM._serialized_start=1533
-  _MATCH_TEAM._serialized_end=1618
-  _SERVERPOOL._serialized_start=1620
-  _SERVERPOOL._serialized_end=1697
-  _TICKET._serialized_start=1700
-  _TICKET._serialized_end=2171
-  _TICKET_PLAYERDATA._serialized_start=2045
-  _TICKET_PLAYERDATA._serialized_end=2121
-  _TICKET_LATENCIESENTRY._serialized_start=2123
-  _TICKET_LATENCIESENTRY._serialized_end=2171
-  _BACKFILLPROPOSAL._serialized_start=2174
-  _BACKFILLPROPOSAL._serialized_end=2573
-  _BACKFILLPROPOSAL_TEAM._serialized_start=1533
-  _BACKFILLPROPOSAL_TEAM._serialized_end=1618
-  _BACKFILLMAKEMATCHESREQUEST._serialized_start=2576
-  _BACKFILLMAKEMATCHESREQUEST._serialized_end=3016
+  _MAKEMATCHESREQUEST_MAKEMATCHESPARAMETERS._serialized_end=1009
+  _MATCHRESPONSE._serialized_start=1027
+  _MATCHRESPONSE._serialized_end=1101
+  _SCOPE._serialized_start=1103
+  _SCOPE._serialized_end=1131
+  _RULES._serialized_start=1133
+  _RULES._serialized_end=1154
+  _PARTY._serialized_start=1156
+  _PARTY._serialized_end=1199
+  _MATCH._serialized_start=1202
+  _MATCH._serialized_end=1651
+  _MATCH_TEAM._serialized_start=1549
+  _MATCH_TEAM._serialized_end=1651
+  _SERVERPOOL._serialized_start=1653
+  _SERVERPOOL._serialized_end=1730
+  _TICKET._serialized_start=1733
+  _TICKET._serialized_end=2204
+  _TICKET_PLAYERDATA._serialized_start=2078
+  _TICKET_PLAYERDATA._serialized_end=2154
+  _TICKET_LATENCIESENTRY._serialized_start=2156
+  _TICKET_LATENCIESENTRY._serialized_end=2204
+  _BACKFILLPROPOSAL._serialized_start=2207
+  _BACKFILLPROPOSAL._serialized_end=2668
+  _BACKFILLPROPOSAL_TEAM._serialized_start=1549
+  _BACKFILLPROPOSAL_TEAM._serialized_end=1651
+  _BACKFILLMAKEMATCHESREQUEST._serialized_start=2671
+  _BACKFILLMAKEMATCHESREQUEST._serialized_end=3127
   _BACKFILLMAKEMATCHESREQUEST_MAKEMATCHESPARAMETERS._serialized_start=852
-  _BACKFILLMAKEMATCHESREQUEST_MAKEMATCHESPARAMETERS._serialized_end=993
-  _BACKFILLRESPONSE._serialized_start=3018
-  _BACKFILLRESPONSE._serialized_end=3118
-  _BACKFILLTICKET._serialized_start=3121
-  _BACKFILLTICKET._serialized_end=3719
-  _BACKFILLTICKET_TEAM._serialized_start=1533
-  _BACKFILLTICKET_TEAM._serialized_end=1618
-  _BACKFILLTICKET_PARTIALMATCH._serialized_start=3428
-  _BACKFILLTICKET_PARTIALMATCH._serialized_end=3719
-  _MATCHFUNCTION._serialized_start=3722
-  _MATCHFUNCTION._serialized_end=4414
+  _BACKFILLMAKEMATCHESREQUEST_MAKEMATCHESPARAMETERS._serialized_end=1009
+  _BACKFILLRESPONSE._serialized_start=3129
+  _BACKFILLRESPONSE._serialized_end=3229
+  _BACKFILLTICKET._serialized_start=3232
+  _BACKFILLTICKET._serialized_end=3847
+  _BACKFILLTICKET_TEAM._serialized_start=1549
+  _BACKFILLTICKET_TEAM._serialized_end=1651
+  _BACKFILLTICKET_PARTIALMATCH._serialized_start=3556
+  _BACKFILLTICKET_PARTIALMATCH._serialized_end=3847
+  _MATCHFUNCTION._serialized_start=3850
+  _MATCHFUNCTION._serialized_end=4542
 # @@protoc_insertion_point(module_scope)
