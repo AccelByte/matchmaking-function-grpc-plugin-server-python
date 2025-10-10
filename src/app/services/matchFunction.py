@@ -14,7 +14,6 @@ from uuid import uuid4
 
 from grpc import ServicerContext, StatusCode
 from google.protobuf.json_format import MessageToJson
-from google.protobuf.struct_pb2 import Struct
 from google.protobuf.timestamp_pb2 import Timestamp
 
 from accelbyte_py_sdk import AccelByteSDK
@@ -307,20 +306,15 @@ class AsyncMatchFunctionService(MatchFunctionServicer):
                 created_at = Timestamp()
                 created_at.FromDateTime(datetime.now(timezone.utc))
 
-                attributes = Struct()
-                attributes.update(b.partial_match.match_attributes)
-                attributes.update({"generatedID": str(uuid4())})
-
                 proposal = BackfillProposal()
                 proposal.backfill_ticket_id = b.ticket_id
                 proposal.CreatedAt = created_at
                 proposal.added_tickets.append(t)
                 proposal.proposed_teams.extend(b.partial_match.teams)
                 proposal.proposed_teams.append(team)
-                proposal.proposal_id = str(uuid4())
+                proposal.proposal_id = ""
                 proposal.match_pool = b.match_pool
                 proposal.match_session_id = b.match_session_id
-                proposal.attributes = attributes
 
                 proposals.append(proposal)
 

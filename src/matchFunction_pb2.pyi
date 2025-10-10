@@ -27,7 +27,7 @@ class BackfillMakeMatchesRequest(_message.Message):
     def __init__(self, parameters: _Optional[_Union[BackfillMakeMatchesRequest.MakeMatchesParameters, _Mapping]] = ..., backfill_ticket: _Optional[_Union[BackfillTicket, _Mapping]] = ..., ticket: _Optional[_Union[Ticket, _Mapping]] = ...) -> None: ...
 
 class BackfillProposal(_message.Message):
-    __slots__ = ["CreatedAt", "added_tickets", "attributes", "backfill_ticket_id", "match_pool", "match_session_id", "proposal_id", "proposed_teams"]
+    __slots__ = ["CreatedAt", "added_tickets", "backfill_ticket_id", "match_pool", "match_session_id", "proposal_id", "proposed_teams"]
     class Team(_message.Message):
         __slots__ = ["parties", "team_id", "user_ids"]
         PARTIES_FIELD_NUMBER: _ClassVar[int]
@@ -38,7 +38,6 @@ class BackfillProposal(_message.Message):
         user_ids: _containers.RepeatedScalarFieldContainer[str]
         def __init__(self, user_ids: _Optional[_Iterable[str]] = ..., parties: _Optional[_Iterable[_Union[Party, _Mapping]]] = ..., team_id: _Optional[str] = ...) -> None: ...
     ADDED_TICKETS_FIELD_NUMBER: _ClassVar[int]
-    ATTRIBUTES_FIELD_NUMBER: _ClassVar[int]
     BACKFILL_TICKET_ID_FIELD_NUMBER: _ClassVar[int]
     CREATEDAT_FIELD_NUMBER: _ClassVar[int]
     CreatedAt: _timestamp_pb2.Timestamp
@@ -47,13 +46,12 @@ class BackfillProposal(_message.Message):
     PROPOSAL_ID_FIELD_NUMBER: _ClassVar[int]
     PROPOSED_TEAMS_FIELD_NUMBER: _ClassVar[int]
     added_tickets: _containers.RepeatedCompositeFieldContainer[Ticket]
-    attributes: _struct_pb2.Struct
     backfill_ticket_id: str
     match_pool: str
     match_session_id: str
     proposal_id: str
     proposed_teams: _containers.RepeatedCompositeFieldContainer[BackfillProposal.Team]
-    def __init__(self, backfill_ticket_id: _Optional[str] = ..., CreatedAt: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., added_tickets: _Optional[_Iterable[_Union[Ticket, _Mapping]]] = ..., proposed_teams: _Optional[_Iterable[_Union[BackfillProposal.Team, _Mapping]]] = ..., proposal_id: _Optional[str] = ..., match_pool: _Optional[str] = ..., match_session_id: _Optional[str] = ..., attributes: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    def __init__(self, backfill_ticket_id: _Optional[str] = ..., CreatedAt: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., added_tickets: _Optional[_Iterable[_Union[Ticket, _Mapping]]] = ..., proposed_teams: _Optional[_Iterable[_Union[BackfillProposal.Team, _Mapping]]] = ..., proposal_id: _Optional[str] = ..., match_pool: _Optional[str] = ..., match_session_id: _Optional[str] = ...) -> None: ...
 
 class BackfillResponse(_message.Message):
     __slots__ = ["backfill_proposal"]
