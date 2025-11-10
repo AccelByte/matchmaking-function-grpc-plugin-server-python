@@ -26,9 +26,9 @@ mkdir -p "${OUT_DIR}"
 clean_generated_files "${OUT_DIR}"
 
 # Generate protobuf files.
-protoc-wrapper \
+python -m grpc_tools.protoc \
   -I"${PROTO_DIR}" \
   --python_out="${OUT_DIR}" \
   --pyi_out="${OUT_DIR}" \
-  --grpc-python_out="${OUT_DIR}" \
+  --grpc_python_out="${OUT_DIR}" \
   "${PROTO_DIR}"/**/*.proto
