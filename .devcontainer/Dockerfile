@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG PROTOC_VERSION=21.9
 ARG PYTHON_VERSION=3.10
-ARG EXTEND_HELPER_CLI_VERSION=0.0.8
+ARG EXTEND_HELPER_CLI_VERSION=0.0.9
 
 # Configure apt and install packages
 RUN apt-get update \
