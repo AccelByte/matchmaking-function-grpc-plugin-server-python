@@ -60,7 +60,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
 USER $USERNAME
 
 # Install Python development tools
-RUN pip install --user grpcio-tools==1.76.0 mypy-protobuf==3.6.0 fillenv==1.0.0
+RUN pip install --user grpcio-tools==1.76.0 mypy-protobuf==4.0.0 fillenv==1.0.0
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog
