@@ -38,7 +38,7 @@ from opentelemetry.sdk.trace import TracerProvider
 
 
 class App:
-    DEFAULT_NAME: str = "app"
+    DEFAULT_NAME: str = "extend-app-matchmaking-func"
     DEFAULT_PORT: int = 6565
     DEFAULT_LOG_LEVEL: Union[int, str] = logging.DEBUG
 
@@ -56,7 +56,8 @@ class App:
             env.read_env()
 
         if not name:
-            name = env.str("SERVICE_NAME", env.str("OTEL_SERVICE_NAME", self.DEFAULT_NAME))
+            val = env.str("SERVICE_NAME", env.str("OTEL_SERVICE_NAME", None))
+            name = f"extend-app-mm-{val.strip().lower()}" if val else self.DEFAULT_NAME
 
         if port is None:
             port = env.int("SERVICE_PORT", self.DEFAULT_PORT)
